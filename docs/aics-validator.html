@@ -272,6 +272,8 @@ Path("/context").mkdir()
   for (const f of files) {
     const text = await f.file.text();
     const pyPath = "/context/" + f.path;
+    const parent = pyPath.substring(0, pyPath.lastIndexOf("/"));
+    if (parent) pyodide.FS.mkdirTree(parent);
     await pyodide.FS.writeFile(pyPath, text, { encoding: "utf8" });
   }
   log("$ wrote " + files.length + " file(s) into Pyodide virtual FS (/context)", "dim");
@@ -308,6 +310,8 @@ Path("/context").mkdir()
 `);
   for (const e of entries) {
     const pyPath = "/context/" + e.path;
+    const parent = pyPath.substring(0, pyPath.lastIndexOf("/"));
+    if (parent) pyodide.FS.mkdirTree(parent);
     await pyodide.FS.writeFile(pyPath, e.content, { encoding: "utf8" });
   }
   await runValidation("manifest");
