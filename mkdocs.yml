@@ -20,6 +20,7 @@ nav:
   - Home: index.html
   - Playground: playground.html
   - AICS Validator: aics-validator.html
+  - Compatibility: compatibility.html
   - Getting Started: getting-started.md
   - Gateway: gateway.md
   - CLI: cli.md

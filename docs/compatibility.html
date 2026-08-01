@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compatibility Matrix — AgentForge</title>
+<meta name="description" content="Which AI coding tools work with which providers — verified, with exact configuration. The AgentForge Gateway unifies them all behind one OpenAI-compatible API.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss: #06080d;
+    --carbon: #0c1019;
+    --carbon-light: #111726;
+    --border: #1c2538;
+    --border-bright: #2a3851;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #475569;
+    --indigo: #818cf8;
+    --indigo-bright: #a5b4fc;
+    --cyan: #22d3ee;
+    --cyan-bright: #67e8f9;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--abyss); color: var(--text);
+    font-family: var(--font); -webkit-font-smoothing: antialiased;
+    line-height: 1.6; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(rgba(129,140,248,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(129,140,248,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,8,13,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .container { display: flex; align-items: center; height: 56px; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; text-decoration: none; color: inherit; }
+  .logo em { font-family: var(--serif); font-style: italic; font-size: 19px; }
+  .forge-mark { width: 22px; height: 22px; }
+  .forge-mark .node { fill: var(--carbon); stroke: var(--indigo); stroke-width: 1; }
+  .forge-mark .link { stroke: var(--cyan); stroke-width: 0.4; opacity: 0.35; }
+  .forge-mark .core { fill: var(--indigo-bright); }
+  nav ul { display: flex; gap: 16px; list-style: none; margin-left: 16px; }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; font-family: var(--mono); transition: color .15s; }
+  nav a:hover { color: var(--text); }
+  nav a.active { color: var(--cyan-bright); }
+  nav .nav-meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+
+  /* hero */
+  .hero { padding: 96px 0 48px; text-align: center; position: relative; }
+  .hero::before {
+    content: ''; position: absolute; top: 30%; left: 50%; transform: translate(-50%,-50%);
+    width: 600px; height: 600px; background: radial-gradient(circle, rgba(129,140,248,0.06), transparent 70%);
+    pointer-events: none;
+  }
+  .epigraph { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-bottom: 28px; letter-spacing: 0.08em; }
+  .epigraph .sep { margin: 0 10px; color: var(--border-bright); }
+  .epigraph .live { color: var(--green); }
+  .hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 7vw, 64px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px; }
+  .hero h1 em { font-style: italic; }
+  .hero h1 .accent { font-style: italic; background: linear-gradient(135deg, var(--indigo-bright), var(--cyan-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .sub { font-size: 17px; color: var(--text-muted); max-width: 620px; margin: 0 auto; line-height: 1.7; }
+
+  /* legend + controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; padding: 32px 0 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 8px 0 24px; }
+  .legend .item { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+  .chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .chip.native { background: var(--green); }
+  .chip.config { background: var(--cyan); }
+  .chip.adapter { background: var(--amber); }
+  .chip.none { background: var(--text-dim); }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding-bottom: 28px; }
+  .fbtn {
+    background: var(--carbon); border: 1px solid var(--border); color: var(--text-muted);
+    font-family: var(--mono); font-size: 11px; padding: 6px 14px; border-radius: 9999px;
+    cursor: pointer; transition: all .15s;
+  }
+  .fbtn:hover { border-color: var(--border-bright); color: var(--text); }
+  .fbtn.on { border-color: var(--cyan); color: var(--cyan-bright); background: rgba(34,211,238,0.06); }
+
+  /* matrix */
+  .matrix-wrap { padding: 8px 0 24px; }
+  .matrix { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--carbon); }
+  .matrix th, .matrix td { padding: 12px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .matrix thead th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-muted); font-weight: 500; background: var(--carbon-light); white-space: nowrap;
+  }
+  .matrix thead th:first-child { text-align: left; }
+  .matrix tbody tr { transition: background .15s; cursor: pointer; }
+  .matrix tbody tr:hover { background: rgba(129,140,248,0.04); }
+  .matrix tbody tr.expanded { background: rgba(129,140,248,0.06); }
+  .matrix tbody tr.expanded .tool-name { color: var(--cyan-bright); }
+  .tool-name { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .tool-name .caret { font-family: var(--mono); font-size: 10px; color: var(--text-dim); transition: transform .2s; }
+  .expanded .caret { transform: rotate(90deg); color: var(--cyan); }
+  .status-cell { text-align: center; }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status.native { color: var(--green); } .status.native .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status.config { color: var(--cyan-bright); } .status.config .dot { background: var(--cyan); }
+  .status.adapter { color: var(--amber); } .status.adapter .dot { background: var(--amber); }
+  .status.none { color: var(--text-dim); } .status.none .dot { background: var(--text-dim); }
+  .status.gateway { color: var(--indigo-bright); } .status.gateway .dot { background: var(--indigo); box-shadow: 0 0 6px var(--indigo); }
+  .detail-row { display: none; }
+  .detail-row.open { display: table-row; }
+  .detail-cell { padding: 0 !important; border-bottom: none !important; background: rgba(12,16,25,0.6); }
+  .detail-inner { padding: 20px 24px 28px; max-width: 720px; }
+  .detail-inner h4 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 10px; }
+  .detail-inner .verdict { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px; }
+  .detail-inner .verdict strong { color: var(--text); }
+  .detail-inner pre {
+    background: #0a0d13; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--cyan-bright);
+  }
+  .detail-inner pre .cm { color: var(--text-dim); }
+  .detail-inner .src { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 10px; }
+  .detail-inner .src a { color: var(--indigo-bright); text-decoration: none; }
+  .detail-inner .src a:hover { text-decoration: underline; }
+  .empty-note { display: none; text-align: center; color: var(--text-muted); font-family: var(--mono); font-size: 13px; padding: 48px 0; }
+  .empty-note.show { display: block; }
+
+  /* gateway banner */
+  .banner {
+    margin: 16px 0 8px; padding: 20px 24px; border: 1px solid var(--cyan); border-radius: 10px;
+    background: rgba(34,211,238,0.04); position: relative;
+  }
+  .banner h3 { font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--cyan-bright); margin-bottom: 8px; }
+  .banner p { font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 720px; }
+  .banner p code { font-family: var(--mono); font-size: 12px; color: var(--cyan-bright); background: var(--carbon-light); padding: 1px 5px; border-radius: 4px; }
+
+  /* footer */
+  footer { padding: 48px 0 40px; border-top: 1px solid var(--border); }
+  footer .container { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; flex-wrap: wrap; }
+  footer .col h4 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 12px; }
+  footer .col a { display: block; color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 3px 0; }
+  footer .col a:hover { color: var(--text); }
+  footer .bottom { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+  footer .bottom a { color: var(--cyan-bright); text-decoration: none; }
+
+  @media (max-width: 768px) {
+    .matrix { display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a class="logo" href="index.html">
+      <svg class="forge-mark" viewBox="0 0 24 24" fill="none"><polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/><line class="link" x1="12" y1="2" x2="12" y2="22"/><line class="link" x1="4" y1="7" x2="20" y2="17"/><line class="link" x1="20" y1="7" x2="4" y2="17"/><circle class="core" cx="12" cy="12" r="2.5"/></svg>
+      <em>AgentForge</em>
+    </a>
+    <ul>
+      <li><a href="index.html">home</a></li>
+      <li><a href="playground.html">playground</a></li>
+      <li><a href="aics-validator.html">validator</a></li>
+      <li><a href="compatibility.html" class="active">compatibility</a></li>
+      <li><a href="https://github.com/AgentForgiT/agentforge">github</a></li>
+    </ul>
+    <div class="nav-meta">★ 42 · MIT</div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="epigraph">
+      <span>Sprint 22</span><span class="sep">·</span><span>verified interoperability</span><span class="sep">·</span><span class="live">● live data</span>
+    </div>
+    <h1>Which tool works with <em class="accent">which provider?</em></h1>
+    <p class="sub">Every claim below traces to a public source or to AgentForge's own live verification — Sprint 19 against real OpenRouter, Sprint 20 against a real Ollama daemon. No invented compatibility.</p>
+    <div class="controls">
+      <div class="legend">
+        <span class="item"><span class="chip native"></span> native</span>
+        <span class="item"><span class="chip config"></span> via config</span>
+        <span class="item"><span class="chip adapter"></span> needs adapter</span>
+        <span class="item"><span class="chip none"></span> no path today</span>
+        <span class="item" style="color:var(--indigo-bright)">◆ recommended: AgentForge Gateway</span>
+      </div>
+    </div>
+    <div class="filter-row" id="filters"></div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="banner">
+    <h3>The unification layer</h3>
+    <p>Any tool that accepts a custom OpenAI-compatible base URL can route through the AgentForge Gateway — giving it <code>mock</code>, <code>ollama</code>, and <code>openrouter</code> providers behind one <code>/v1</code> endpoint, with model aliases and streaming. That's the row marked <strong style="color:var(--indigo-bright)">◆ Gateway</strong>.</p>
+  </div>
+
+  <div class="matrix-wrap">
+    <table class="matrix" id="matrix">
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th class="status-cell">OpenAI</th>
+          <th class="status-cell">Anthropic</th>
+          <th class="status-cell">Gemini</th>
+          <th class="status-cell">OpenRouter</th>
+          <th class="status-cell">Ollama / local</th>
+          <th class="status-cell">◆ Gateway</th>
+        </tr>
+      </thead>
+      <tbody id="body"></tbody>
+    </table>
+    <div class="empty-note" id="empty">No tools match this filter.</div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="col">
+      <div class="logo" style="margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <svg class="forge-mark" viewBox="0 0 24 24" fill="none"><polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/><line class="link" x1="12" y1="2" x2="12" y2="22"/><line class="link" x1="4" y1="7" x2="20" y2="17"/><line class="link" x1="20" y1="7" x2="4" y2="17"/><circle class="core" cx="12" cy="12" r="2.5"/></svg>
+        <em style="font-family:var(--serif);font-style:italic;font-size:19px;">AgentForge</em>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);max-width:300px;line-height:1.6">Open engineering platform for agentic AI systems. MIT-licensed. Governance-first.</p>
+    </div>
+    <div class="col"><h4>product</h4><a href="index.html">Home</a><a href="playground.html">Playground</a><a href="aics-validator.html">Validator</a><a href="compatibility.html">Compatibility</a></div>
+    <div class="col"><h4>docs</h4><a href="gateway.md">Gateway</a><a href="cli.md">CLI</a><a href="aics.md">AICS</a><a href="getting-started.md">Getting Started</a></div>
+    <div class="col"><h4>community</h4><a href="https://github.com/AgentForgiT/agentforge">GitHub</a><a href="https://github.com/AgentForgiT/agentforge-handbook">Handbook</a><a href="contributing.md">Contributing</a><a href="governance.md">Governance</a></div>
+  </div>
+  <div class="container">
+    <div class="bottom">Genesis-0.0.21 · Sprint 22 · built on AgentForge · <a href="https://agentforgit.github.io/agentforge-docs-site/">agentforgit.github.io</a></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+// status legend: native | config | adapter | none | gateway
+var TOOLS = [
+  {
+    name: "Claude Code",
+    src: "anthropics/claude-code#216 + claudeapi.com guide",
+    url: "https://github.com/anthropics/claude-code/issues/216",
+    statuses: { openai: "adapter", anthropic: "native", gemini: "adapter", openrouter: "adapter", ollama: "adapter", gateway: "adapter" },
+    verdict: "<strong>Speaks the Anthropic Messages API</strong> — not OpenAI-compatible natively. Point <code>ANTHROPIC_BASE_URL</code> at any Anthropic-compatible endpoint. For non-Anthropic providers you need a protocol bridge (e.g. claude-code-router) — the AgentForge Gateway currently exposes OpenAI-compatible <code>/v1</code>.",
+    config: "# ~/.claude/settings.json — Anthropic-compatible backend\n{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"https://your-anthropic-compatible.endpoint\",\n    \"ANTHROPIC_API_KEY\": \"sk-...\"\n  }\n}\n\n# note: gateway exposes OpenAI-compatible /v1;\n# an Anthropic-protocol adapter is required to bridge."
+  },
+  {
+    name: "Codex CLI",
+    src: "openrouter.ai blog + morphllm.com + superagentic-ai guide",
+    url: "https://openrouter.ai/blog/tutorials/codex-cli-openrouter/",
+    statuses: { openai: "native", anthropic: "none", gemini: "config", openrouter: "config", ollama: "config", gateway: "config" },
+    verdict: "<strong>Custom providers via <code>~/.codex/config.toml</code>.</strong> OpenRouter and Ollama (at <code>http://localhost:11434/v1</code>) are both documented; any OpenAI-compatible <code>/v1</code> — including the AgentForge Gateway — works the same way.",
+    config: "# ~/.codex/config.toml — via the AgentForge Gateway\nmodel = \"local-llama3\"\nmodel_provider = \"agentforge\"\n\n[model_providers.agentforge]\nname = \"AgentForge Gateway\"\nbase_url = \"http://127.0.0.1:8080/v1\"\nwire_api = \"chat\"\n# no env_key — keyless local gateway (ADR-0017)\n\n# or point straight at Ollama\n[model_providers.ollama]\nname = \"Ollama\"\nbase_url = \"http://localhost:11434/v1\""
+  },
+  {
+    name: "OpenCode",
+    src: "opencode.ai/docs/providers",
+    url: "https://opencode.ai/docs/providers/",
+    statuses: { openai: "native", anthropic: "native", gemini: "native", openrouter: "config", ollama: "config", gateway: "config" },
+    verdict: "<strong>Any provider via <code>@ai-sdk/openai-compatible</code>.</strong> Define a custom provider with a <code>baseURL</code>; the AgentForge Gateway plugs straight in.",
+    config: "// ~/.config/opencode/opencode.json\n{\n  \"$schema\": \"https://opencode.ai/config.json\",\n  \"provider\": {\n    \"agentforge\": {\n      \"npm\": \"@ai-sdk/openai-compatible\",\n      \"name\": \"AgentForge Gateway\",\n      \"options\": { \"baseURL\": \"http://127.0.0.1:8080/v1\" },\n      \"models\": {\n        \"local-llama3\": { \"name\": \"Local llama3.2\" },\n        \"mock-coder\":  { \"name\": \"Mock (deterministic)\" }\n      }\n    }\n  },\n  \"model\": \"agentforge/local-llama3\"\n}"
+  },
+  {
+    name: "Cursor",
+    src: "claudeapi.com guide (OpenAI-compatible custom endpoint)",
+    url: "https://claudeapi.com/en/blog/tools/claude-code-cline-cursor-claudeapi-config-guide/",
+    statuses: { openai: "native", anthropic: "native", gemini: "none", openrouter: "config", ollama: "config", gateway: "config" },
+    verdict: "<strong>OpenAI-compatible custom endpoints supported</strong> (\"Override OpenAI Base URL\"). Set it to the gateway and pick an alias model.",
+    config: "Cursor Settings → Models → OpenAI API Key: (any)\n  Override OpenAI Base URL: http://127.0.0.1:8080/v1\n\n# then select a gateway alias as the model,\n# e.g. local-llama3 or mock-coder"
+  },
+  {
+    name: "Cline",
+    src: "claudeapi.com guide (Anthropic + OpenAI-compatible modes)",
+    url: "https://claudeapi.com/en/blog/tools/claude-code-cline-cursor-claudeapi-config-guide/",
+    statuses: { openai: "native", anthropic: "native", gemini: "none", openrouter: "config", ollama: "config", gateway: "config" },
+    verdict: "<strong>OpenAI-compatible mode or Anthropic mode with a custom base URL.</strong> Both point at the gateway or any compatible endpoint.",
+    config: "Cline → API Provider: OpenAI Compatible\n  Base URL: http://127.0.0.1:8080/v1\n  API Key: (any — gateway is keyless locally)\n  Model ID: local-llama3"
+  },
+  {
+    name: "AgentForge Gateway",
+    src: "AgentForge ADR-0017/0018 + Sprint 19/20 live verification",
+    url: "https://github.com/AgentForgiT/agentforge",
+    statuses: { openai: "config", anthropic: "adapter", gemini: "config", openrouter: "config", ollama: "native", gateway: "native" },
+    verdict: "<strong>The unification layer itself.</strong> OpenAI-compatible <code>/v1</code> with <code>mock</code>, keyless <code>ollama</code>, and <code>openrouter</code> providers behind model aliases. Streaming, CORS, 136 offline tests, live-verified against both OpenRouter (Sprint 19) and Ollama (Sprint 20).",
+    config: "# config.example.json — run once, use everywhere\n{\n  \"server\": { \"host\": \"127.0.0.1\", \"port\": 8080,\n               \"cors_origin\": \"https://agentforgit.github.io\" },\n  \"models\": {\n    \"mock-coder\":    { \"provider\": \"mock\", \"provider_model\": \"mock-coder-v1\" },\n    \"local-llama3\":  { \"provider\": \"ollama\", \"provider_model\": \"llama3.2\" }\n  },\n  \"providers\": {\n    \"mock\": { \"type\": \"mock\" },\n    \"ollama\": { \"type\": \"ollama\",\n                 \"base_url\": \"http://127.0.0.1:11434/v1\" }\n  }\n}"
+  }
+];
+
+var FILTERS = [
+  { id: "openai", label: "OpenAI" },
+  { id: "anthropic", label: "Anthropic" },
+  { id: "gemini", label: "Gemini" },
+  { id: "openrouter", label: "OpenRouter" },
+  { id: "ollama", label: "Ollama / local" },
+  { id: "gateway", label: "◆ Gateway" }
+];
+
+var activeFilter = null;
+var expandedRow = null;
+
+function buildFilters() {
+  var wrap = document.getElementById("filters");
+  var all = document.createElement("button");
+  all.className = "fbtn on";
+  all.textContent = "all tools";
+  all.addEventListener("click", function() { activeFilter = null; refreshFilterButtons(); render(); });
+  wrap.appendChild(all);
+  FILTERS.forEach(function(f) {
+    var b = document.createElement("button");
+    b.className = "fbtn";
+    b.textContent = f.label;
+    b.dataset.id = f.id;
+    b.addEventListener("click", function() {
+      activeFilter = (activeFilter === f.id) ? null : f.id;
+      refreshFilterButtons();
+      render();
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function refreshFilterButtons() {
+  var btns = document.querySelectorAll(".fbtn");
+  btns.forEach(function(b) {
+    b.classList.toggle("on", !b.dataset.id ? !activeFilter : b.dataset.id === activeFilter);
+  });
+}
+
+function statusLabel(id) {
+  switch (id) {
+    case "native": return "native";
+    case "config": return "via config";
+    case "adapter": return "needs adapter";
+    case "none": return "—";
+    case "gateway": return "native";
+  }
+}
+
+function render() {
+  var body = document.getElementById("body");
+  body.innerHTML = "";
+  var matched = 0;
+  TOOLS.forEach(function(tool) {
+    if (activeFilter && tool.statuses[activeFilter] === "none") return;
+    matched++;
+
+    var tr = document.createElement("tr");
+    tr.dataset.tool = tool.name;
+    tr.addEventListener("click", function() { toggleRow(tool, tr); });
+
+    var nameTd = document.createElement("td");
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "tool-name";
+    var caret = document.createElement("span");
+    caret.className = "caret";
+    caret.textContent = "▶";
+    nameSpan.appendChild(caret);
+    nameSpan.appendChild(document.createTextNode(tool.name));
+    nameTd.appendChild(nameSpan);
+    tr.appendChild(nameTd);
+
+    ["openai", "anthropic", "gemini", "openrouter", "ollama", "gateway"].forEach(function(key) {
+      var td = document.createElement("td");
+      td.className = "status-cell";
+      var s = document.createElement("span");
+      var status = key === "gateway" ? "gateway" : tool.statuses[key];
+      s.className = "status " + status;
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      s.appendChild(dot);
+      s.appendChild(document.createTextNode(statusLabel(status)));
+      td.appendChild(s);
+      tr.appendChild(td);
+    });
+
+    body.appendChild(tr);
+
+    // detail row
+    var dr = document.createElement("tr");
+    dr.className = "detail-row";
+    dr.dataset.detail = tool.name;
+    var dc = document.createElement("td");
+    dc.colSpan = 7;
+    dc.className = "detail-cell";
+    var inner = document.createElement("div");
+    inner.className = "detail-inner";
+    var h = document.createElement("h4");
+    h.textContent = "Configuration — " + tool.name + " → AgentForge Gateway";
+    var v = document.createElement("div");
+    v.className = "verdict";
+    v.innerHTML = tool.verdict;
+    var pre = document.createElement("pre");
+    pre.innerHTML = tool.config.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+    var src = document.createElement("div");
+    src.className = "src";
+    var a = document.createElement("a");
+    a.href = tool.url;
+    a.target = "_blank";
+    a.textContent = "source: " + tool.src;
+    src.appendChild(a);
+    inner.appendChild(h);
+    inner.appendChild(v);
+    inner.appendChild(pre);
+    inner.appendChild(src);
+    dc.appendChild(inner);
+    dr.appendChild(dc);
+    body.appendChild(dr);
+  });
+
+  document.getElementById("empty").classList.toggle("show", matched === 0);
+}
+
+function toggleRow(tool, tr) {
+  var dr = document.querySelector('tr.detail-row[data-detail="' + tool.name + '"]');
+  var isOpen = dr.classList.contains("open");
+  // close any open
+  document.querySelectorAll(".detail-row.open").forEach(function(r) { r.classList.remove("open"); });
+  document.querySelectorAll("tr.expanded").forEach(function(r) { r.classList.remove("expanded"); });
+  if (!isOpen) {
+    dr.classList.add("open");
+    tr.classList.add("expanded");
+  }
+}
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
