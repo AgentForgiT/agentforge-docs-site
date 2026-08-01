@@ -1,0 +1,27 @@
+site_name: AgentForge
+site_description: Open engineering platform for agentic AI systems
+site_url: https://agentforgit.github.io/agentforge-docs-site/
+repo_url: https://github.com/AgentForgiT/agentforge
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: indigo
+    accent: cyan
+  features:
+    - navigation.top
+    - navigation.sections
+    - content.code.copy
+markdown_extensions:
+  - admonition
+  - codehilite
+  - tables
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Gateway: gateway.md
+  - CLI: cli.md
+  - AICS: aics.md
+  - Governance: governance.md
+  - Contributing: contributing.md
+  - Handbook: https://github.com/AgentForgiT/agentforge-handbook
