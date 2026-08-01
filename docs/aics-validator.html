@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentForge AICS Validator — in your browser</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121722;
+    --panel-2: #161d2b;
+    --border: #232c3f;
+    --text: #e6eaf2;
+    --muted: #8b96ab;
+    --indigo: #818cf8;
+    --cyan: #22d3ee;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  header {
+    padding: 24px 32px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(34,211,238,0.07), rgba(129,140,248,0.05));
+  }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  header h1 span { color: var(--cyan); }
+  header p { color: var(--muted); font-size: 13px; margin-top: 6px; max-width: 760px; line-height: 1.55; }
+  .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 16px; padding: 16px 32px 32px; flex: 1; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
+  button {
+    background: var(--indigo); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: filter 0.15s;
+  }
+  button:hover { filter: brightness(1.12); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
+  textarea {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 11px;
+    font-size: 12px; font-family: var(--mono); outline: none; resize: vertical;
+    min-height: 200px; line-height: 1.55;
+  }
+  textarea:focus { border-color: var(--indigo); }
+  .status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pulse.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pulse.busy { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: blink 1s infinite; }
+  .pulse.err { background: var(--red); }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .results { background: #0a0d13; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 420px; }
+  .results-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #f87171; } .dot.y { background: #fbbf24; } .dot.g { background: #34d399; }
+  .results-title { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  #output { flex: 1; overflow-y: auto; padding: 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  #output .dim { color: var(--muted); }
+  #output .green { color: var(--green); }
+  #output .red { color: var(--red); }
+  #output .amber { color: var(--amber); }
+  #output .cyan { color: var(--cyan); }
+  #output .pass { color: var(--green); }
+  #output .fail { color: var(--red); }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .hint code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-family: var(--mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AgentForge <span>AICS Validator</span></h1>
+  <p>The exact validation logic from <code>scripts/aics_validation.py</code> — compiled to WebAssembly via Pyodide — running in this tab against <em>your</em> repository. No install, no upload to a server: the whole run happens on your machine.</p>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Runtime</h2>
+    <div class="status"><span class="pulse" id="rtDot"></span><span id="rtText">Pyodide not loaded</span></div>
+    <button id="loadBtn" onclick="bootRuntime()">Load Pyodide runtime (~10 MB, once)</button>
+    <button class="secondary" onclick="sampleContext()">Load sample context</button>
+
+    <h2>1 · Pick a repo folder</h2>
+    <button id="pickBtn" onclick="pickFolder()">Choose folder…</button>
+    <div class="hint" id="folderHint">Chrome / Edge only (File System Access API). Other browsers: use the manifest below.</div>
+
+    <h2>2 · …or paste a manifest</h2>
+    <label>One entry per file: <code>=== path ===</code> then content</label>
+    <textarea id="manifest" spellcheck="false"></textarea>
+
+    <button onclick="validateManifest()" id="runBtn" disabled>Validate</button>
+    <div class="hint">
+      The validator checks for the AICS-required directories, files, <code>Metadata:</code> blocks, and required text markers — the same checks the CLI runs in CI on every AgentForge push.
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="results-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="results-title">validate_aics(root) · output</div>
+      <button class="secondary" onclick="clearOutput()" style="padding:4px 10px;font-size:11px;">Clear</button>
+    </div>
+    <div id="output"><span class="dim">// Pyodide + the real aics_validation.py will run here.</span></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const out = document.getElementById("output");
+const rtDot = document.getElementById("rtDot");
+const rtText = document.getElementById("rtText");
+let pyodide = null;
+
+// --- The exact contents of scripts/aics_validation.py (v0.1, AgentForge main) ---
+const VALIDATOR_PY = String.raw`
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+AICS_REQUIRED_DIRS = (
+    ".agentforge",
+    ".agentforge/adrs",
+    ".agentforge/agents",
+    ".agentforge/rfcs",
+    ".agentforge/standards",
+)
+
+AICS_REQUIRED_FILES = (
+    ".agentforge/constitution.md",
+    ".agentforge/charter.md",
+    ".agentforge/decisions.md",
+    ".agentforge/architecture.md",
+    ".agentforge/repo-map.md",
+    ".agentforge/agents/AGENTS.md",
+    ".agentforge/adrs/ADR_TEMPLATE.md",
+    ".agentforge/rfcs/RFC_TEMPLATE.md",
+)
+
+AICS_METADATA_FILES = (
+    ".agentforge/constitution.md",
+    ".agentforge/charter.md",
+    ".agentforge/decisions.md",
+    ".agentforge/architecture.md",
+    ".agentforge/repo-map.md",
+    ".agentforge/agents/AGENTS.md",
+)
+
+REQUIRED_TEXT = {
+    ".agentforge/agents/AGENTS.md": ("constitution", "charter", "ADR", "RFC"),
+    ".agentforge/adrs/ADR_TEMPLATE.md": ("Context", "Decision", "Consequences"),
+    ".agentforge/rfcs/RFC_TEMPLATE.md": ("Purpose", "Proposal", "Risks"),
+}
+
+@dataclass(frozen=True)
+class ValidationResult:
+    errors: tuple
+
+    @property
+    def ok(self):
+        return not self.errors
+
+def validate_aics(root):
+    errors = []
+    for relative in AICS_REQUIRED_DIRS:
+        if not (root / relative).is_dir():
+            errors.append(f"missing AICS directory: {relative}")
+    for relative in AICS_REQUIRED_FILES:
+        if not (root / relative).is_file():
+            errors.append(f"missing AICS file: {relative}")
+    for relative in AICS_METADATA_FILES:
+        path = root / relative
+        if path.is_file() and "Metadata:" not in path.read_text(encoding="utf-8"):
+            errors.append(f"missing Metadata block: {relative}")
+    for relative, expected_values in REQUIRED_TEXT.items():
+        path = root / relative
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for expected in expected_values:
+            if expected not in text:
+                errors.append(f"missing required text '{expected}': {relative}")
+    return ValidationResult(tuple(errors))
+`;
+
+function log(text, cls) {
+  const div = document.createElement("div");
+  if (cls) div.className = cls;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearOutput() { out.innerHTML = '<span class="dim">// cleared</span>'; }
+
+function setRt(state, text) {
+  rtDot.className = "pulse" + (state === "on" ? " on" : state === "busy" ? " busy" : state === "err" ? " err" : "");
+  rtText.textContent = text;
+}
+
+async function bootRuntime() {
+  const btn = document.getElementById("loadBtn");
+  btn.disabled = true;
+  setRt("busy", "loading Pyodide from CDN…");
+  clearOutput();
+  log("$ loading Pyodide (WASM Python runtime)…", "dim");
+  try {
+    const module = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/" });
+    pyodide = module;
+    await pyodide.runPythonAsync(VALIDATOR_PY);
+    log("Pyodide " + pyodide.version + " ready; aics_validation.py loaded.", "green");
+    setRt("on", "Pyodide ready");
+    document.getElementById("runBtn").disabled = false;
+  } catch (e) {
+    log("load failed: " + e.message, "red");
+    setRt("err", "load failed");
+    btn.disabled = false;
+  }
+}
+
+// --- Folder mode: File System Access API (Chrome/Edge) ---
+async function pickFolder() {
+  if (!pyodide) { log("Load the Pyodide runtime first.", "amber"); return; }
+  if (!window.showDirectoryPicker) { log("File System Access API not available — use the manifest instead.", "red"); return; }
+  clearOutput();
+  setRt("busy", "reading folder…");
+  try {
+    const handle = await window.showDirectoryPicker({ mode: "read" });
+    const files = await walkDir(handle);
+    log("$ found " + files.length + " file(s) in selected folder", "dim");
+    await writeToFs(files, "folder");
+    await runValidation("folder");
+  } catch (e) {
+    if (e.name === "AbortError") { log("cancelled", "dim"); setRt("on", "Pyodide ready"); return; }
+    log("folder read failed: " + e.message, "red");
+    setRt("err", "read failed");
+  }
+}
+
+async function walkDir(handle, prefix) {
+  const files = [];
+  const base = prefix || "";
+  for await (const entry of handle.values()) {
+    if (entry.kind === "file") {
+      const file = await entry.getFile();
+      files.push({ path: (base ? base + "/" : "") + entry.name, file });
+    } else if (entry.kind === "directory") {
+      files.push(...await walkDir(entry, (base ? base + "/" : "") + entry.name));
+    }
+  }
+  return files;
+}
+
+async function writeToFs(files, mode) {
+  // reset the virtual context dir
+  await pyodide.runPythonAsync(`
+import shutil
+from pathlib import Path
+shutil.rmtree("/context", ignore_errors=True)
+Path("/context").mkdir()
+`);
+  for (const f of files) {
+    const text = await f.file.text();
+    const pyPath = "/context/" + f.path;
+    await pyodide.FS.writeFile(pyPath, text, { encoding: "utf8" });
+  }
+  log("$ wrote " + files.length + " file(s) into Pyodide virtual FS (/context)", "dim");
+}
+
+// --- Manifest mode: universal fallback ---
+function parseManifest(text) {
+  const entries = [];
+  const re = /^=== (.+?) ===\s*$/gm;
+  let m, lastIdx = 0, lastPath = null;
+  const matches = [...text.matchAll(re)];
+  for (let i = 0; i < matches.length; i++) {
+    const path = matches[i][1].trim();
+    const contentStart = matches[i].index + matches[i][0].length;
+    const contentEnd = i + 1 < matches.length ? matches[i + 1].index : text.length;
+    entries.push({ path, content: text.slice(contentStart, contentEnd).replace(/^\n/, "").replace(/\n$/, "") });
+  }
+  return entries;
+}
+
+async function validateManifest() {
+  if (!pyodide) { log("Load the Pyodide runtime first.", "amber"); return; }
+  const text = document.getElementById("manifest").value;
+  const entries = parseManifest(text);
+  if (!entries.length) { log("manifest empty — paste `=== path ===` entries first (see sample).", "amber"); return; }
+  clearOutput();
+  setRt("busy", "validating…");
+  log("$ parsed " + entries.length + " manifest entr" + (entries.length === 1 ? "y" : "ies"), "dim");
+  await pyodide.runPythonAsync(`
+import shutil
+from pathlib import Path
+shutil.rmtree("/context", ignore_errors=True)
+Path("/context").mkdir()
+`);
+  for (const e of entries) {
+    const pyPath = "/context/" + e.path;
+    await pyodide.FS.writeFile(pyPath, e.content, { encoding: "utf8" });
+  }
+  await runValidation("manifest");
+}
+
+async function runValidation(mode) {
+  log("$ validate_aics(Path('/context'))", "dim");
+  const result = await pyodide.runPythonAsync(`
+import json
+from pathlib import Path
+res = validate_aics(Path("/context"))
+json.dumps({"ok": res.ok, "errors": list(res.errors)})
+`);
+  const parsed = JSON.parse(result);
+  if (parsed.ok) {
+    log("AICS VALID ✓  —  context is valid", "pass");
+    setRt("on", "valid ✓");
+  } else {
+    log("AICS INVALID ✗  — " + parsed.errors.length + " problem(s):", "fail");
+    parsed.errors.forEach(e => log("  - " + e, "fail"));
+    setRt("err", "invalid ✗");
+  }
+  log("$ done (mode: " + mode + ")", "dim");
+}
+
+// --- Sample context: the minimum valid AICS skeleton ---
+function sampleContext() {
+  document.getElementById("manifest").value =
+`=== .agentforge/constitution.md ===
+# Constitution
+Metadata: draft
+The project is governed openly.
+
+=== .agentforge/charter.md ===
+# Charter
+Metadata: draft
+Purpose of the project.
+
+=== .agentforge/decisions.md ===
+# Decisions
+Metadata: active
+ADR index.
+
+=== .agentforge/architecture.md ===
+# Architecture
+Metadata: draft
+System boundaries.
+
+=== .agentforge/repo-map.md ===
+# Repo Map
+Metadata: draft
+Where things live.
+
+=== .agentforge/agents/AGENTS.md ===
+# AGENTS
+Metadata: active
+constitution, charter, ADR, RFC references.
+
+=== .agentforge/adrs/ADR_TEMPLATE.md ===
+# ADR Template
+Context
+Decision
+Consequences
+
+=== .agentforge/rfcs/RFC_TEMPLATE.md ===
+# RFC Template
+Purpose
+Proposal
+Risks
+
+=== .agentforge/standards/README.md ===
+# Standards
+Metadata: draft
+Placeholder to materialize the standards directory.
+`;
+  log("sample manifest loaded — hit Validate", "amber");
+}
+
+// --- Pyodide global binding (external script defines window.loadPyodide) ---
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentForge Playground</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121722;
+    --panel-2: #161d2b;
+    --border: #232c3f;
+    --text: #e6eaf2;
+    --muted: #8b96ab;
+    --indigo: #818cf8;
+    --cyan: #22d3ee;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 24px 32px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(129,140,248,0.08), rgba(34,211,238,0.05));
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  header h1 span { color: var(--cyan); }
+  header p { color: var(--muted); font-size: 13px; margin-top: 6px; max-width: 720px; line-height: 1.5; }
+  .wrap { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px 32px 32px; flex: 1; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
+  input[type=text], select, textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 9px 11px;
+    font-size: 13px;
+    font-family: var(--mono);
+    outline: none;
+  }
+  input[type=text]:focus, select:focus, textarea:focus { border-color: var(--indigo); }
+  textarea { resize: vertical; min-height: 72px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  button {
+    background: var(--indigo);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  button:hover { filter: brightness(1.12); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
+  button.small { padding: 6px 10px; font-size: 12px; }
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
+  .switch input { accent-color: var(--cyan); width: 15px; height: 15px; }
+  #banner {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid;
+  }
+  #banner.error { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.4); color: var(--red); }
+  #banner.ok { background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.4); color: var(--green); }
+  #banner.info { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.4); color: var(--amber); }
+  .console {
+    background: #0a0d13;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 420px;
+  }
+  .console-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #f87171; } .dot.y { background: #fbbf24; } .dot.g { background: #34d399; }
+  .console-title { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  #output {
+    flex: 1; overflow-y: auto; padding: 14px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  #output .dim { color: var(--muted); }
+  #output .cyan { color: var(--cyan); }
+  #output .green { color: var(--green); }
+  #output .red { color: var(--red); }
+  #output .amber { color: var(--amber); }
+  #output .indigo { color: var(--indigo); }
+  .status {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--muted); font-family: var(--mono);
+  }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pulse.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pulse.err { background: var(--red); }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .hint code {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 5px; font-family: var(--mono); font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>AgentForge <span>Playground</span></h1>
+  <p>This page <em>is</em> the product: it talks to your local AgentForge gateway over the OpenAI-compatible API — streaming, provider adapters, model aliases, live. Point it at <code>http://127.0.0.1:8080</code> and run.</p>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Connection</h2>
+    <div>
+      <label>Gateway URL</label>
+      <input type="text" id="gwUrl" value="http://127.0.0.1:8080" spellcheck="false">
+    </div>
+    <div class="row">
+      <button class="secondary small" onclick="checkHealth()">Health</button>
+      <button class="secondary small" onclick="loadModels()">Models</button>
+    </div>
+    <div class="status" id="connStatus"><span class="pulse" id="connDot"></span><span id="connText">disconnected</span></div>
+
+    <h2>Chat</h2>
+    <div>
+      <label>Model</label>
+      <select id="model"></select>
+    </div>
+    <div>
+      <label>System prompt</label>
+      <textarea id="system" spellcheck="false">You are a concise, helpful engineering assistant.</textarea>
+    </div>
+    <div>
+      <label>User message</label>
+      <textarea id="prompt" spellcheck="false">Explain what AgentForge is in two sentences.</textarea>
+    </div>
+    <div class="row">
+      <label class="switch"><input type="checkbox" id="stream" checked> Stream</label>
+      <button onclick="sendChat()" id="sendBtn">Send</button>
+    </div>
+    <div class="hint">
+      Start a gateway locally, then reload:
+      <br><code>python -m agentforge_gateway.cli --config apps/gateway/config.example.json</code>
+      <br><br>The default config ships with <code>cors_origin</code> pre-set for this site (ADR-0018) — no browser CORS errors, no keys.
+    </div>
+  </div>
+
+  <div class="console">
+    <div class="console-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="console-title">gateway · curl-equivalent transcript</div>
+      <button class="secondary small" onclick="clearOutput()">Clear</button>
+    </div>
+    <div id="output"><span class="dim">// waiting for a request…</span></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const out = document.getElementById("output");
+const dot = document.getElementById("connDot");
+const connText = document.getElementById("connText");
+
+function gw() { return document.getElementById("gwUrl").value.replace(/\/+$/, ""); }
+
+function log(text, cls) {
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = text;
+  out.appendChild(span);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearOutput() { out.innerHTML = '<span class="dim">// cleared</span>'; }
+
+function setConn(state, text) {
+  dot.className = "pulse" + (state === "ok" ? " on" : state === "err" ? " err" : "");
+  connText.textContent = text;
+}
+
+async function checkHealth() {
+  clearOutput();
+  log("$ curl " + gw() + "/health", "dim");
+  try {
+    const res = await fetch(gw() + "/health", { mode: "cors" });
+    const body = await res.json();
+    log(res.status + " " + JSON.stringify(body), res.ok ? "green" : "red");
+    setConn("ok", "gateway online");
+  } catch (e) {
+    log("failed: " + e.message, "red");
+    setConn("err", "unreachable");
+  }
+}
+
+async function loadModels() {
+  clearOutput();
+  log("$ curl " + gw() + "/v1/models", "dim");
+  try {
+    const res = await fetch(gw() + "/v1/models", { mode: "cors" });
+    const body = await res.json();
+    const sel = document.getElementById("model");
+    sel.innerHTML = "";
+    const models = (body.data || []).map(m => m.id);
+    log(res.status + " " + models.length + " model(s): " + models.join(", "), "green");
+    if (!models.length) {
+      sel.innerHTML = '<option value="">— no models —</option>';
+      return;
+    }
+    models.forEach(id => {
+      const opt = document.createElement("option");
+      opt.value = id; opt.textContent = id;
+      sel.appendChild(opt);
+    });
+    setConn("ok", "models loaded");
+  } catch (e) {
+    log("failed: " + e.message, "red");
+    setConn("err", "unreachable");
+  }
+}
+
+async function sendChat() {
+  const model = document.getElementById("model").value;
+  const prompt = document.getElementById("prompt").value;
+  if (!model) { log("pick a model first (Models button)", "amber"); return; }
+  const stream = document.getElementById("stream").checked;
+  const payload = {
+    model: model,
+    stream: stream,
+    messages: [
+      { role: "system", content: document.getElementById("system").value },
+      { role: "user", content: prompt }
+    ]
+  };
+  clearOutput();
+  log("$ curl " + gw() + "/v1/chat/completions -d " + JSON.stringify(payload), "dim");
+  const sendBtn = document.getElementById("sendBtn");
+  sendBtn.disabled = true;
+  try {
+    const res = await fetch(gw() + "/v1/chat/completions", {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!stream) {
+      const body = await res.json();
+      if (body.error) { log(res.status + " " + JSON.stringify(body.error), "red"); return; }
+      const msg = body.choices && body.choices[0] && body.choices[0].message;
+      log("[assistant] " + (msg && msg.content !== null && msg.content !== undefined ? msg.content : JSON.stringify(msg)), "cyan");
+      if (body.usage) log("usage: " + JSON.stringify(body.usage), "green");
+      return;
+    }
+    if (!res.ok || !res.headers.get("content-type") || !res.headers.get("content-type").includes("text/event-stream")) {
+      const body = await res.json().catch(() => ({}));
+      log(res.status + " " + JSON.stringify(body.error || body), "red");
+      return;
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let content = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data:")) continue;
+        const data = trimmed.slice(5).trim();
+        if (data === "[DONE]") { log("\n[done]", "green"); continue; }
+        let chunk; try { chunk = JSON.parse(data); } catch (e) { continue; }
+        const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+        const piece = delta && delta.content ? delta.content : "";
+        if (piece) {
+          content += piece;
+          // render progressively
+          const all = out.querySelectorAll("div");
+          const last = all[all.length - 1];
+          if (last && last.textContent.startsWith("[assistant]")) last.textContent = "[assistant] " + content;
+          else log("[assistant] " + content, "cyan");
+          out.scrollTop = out.scrollHeight;
+        }
+      }
+    }
+  } catch (e) {
+    log("failed: " + e.message, "red");
+    setConn("err", "unreachable");
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

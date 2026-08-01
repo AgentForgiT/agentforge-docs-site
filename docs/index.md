@@ -21,9 +21,16 @@ curl http://127.0.0.1:8080/v1/chat/completions \
 
 No keys. No network. The default config uses the deterministic mock provider.
 
+## Try it now
+
+This site runs on AgentForge — don't take our word for it:
+
+- [**Playground**](playground.html) — talk to your local gateway from this page: streaming completions, model aliases, live. The gateway ships CORS-enabled for this site.
+- [**AICS Validator**](aics-validator.html) — validate a repository against the AgentForge Context Specification entirely in your browser, via Pyodide/WASM running the exact production validator.
+
 ## Project state
 
-Genesis: 18 sprints shipped, each released as a `Genesis-0.0.x` milestone with requirements, ADR, implementation, tests, CI validation, and release notes. Every architecture decision is recorded as an ADR; the monorepo's own context passes AICS validation in CI on every push.
+Genesis: 21 sprints shipped, each released as a `Genesis-0.0.x` milestone with requirements, ADR, implementation, tests, CI validation, and release notes. Every architecture decision is recorded as an ADR; the monorepo's own context passes AICS validation in CI on every push.
 
 ## Where to go next
 
