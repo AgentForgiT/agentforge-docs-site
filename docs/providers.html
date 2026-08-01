@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provider Explorer — AgentForge</title>
+<meta name="description" content="Live view of the AgentForge gateway's models and providers. Connect to a running gateway and see its registry, then test any model from the page.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss: #06080d; --carbon: #0c1019; --carbon-light: #111726;
+    --border: #1c2538; --border-bright: #2a3851;
+    --text: #e2e8f0; --text-muted: #64748b; --text-dim: #475569;
+    --indigo: #818cf8; --indigo-bright: #a5b4fc;
+    --cyan: #22d3ee; --cyan-bright: #67e8f9;
+    --green: #34d399; --amber: #fbbf24; --red: #f87171;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--abyss); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; line-height: 1.6; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1;
+    background-image: linear-gradient(rgba(129,140,248,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(129,140,248,0.025) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(6,8,13,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  nav .container { display: flex; align-items: center; height: 56px; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; text-decoration: none; color: inherit; }
+  .logo em { font-family: var(--serif); font-style: italic; font-size: 19px; }
+  .forge-mark { width: 22px; height: 22px; }
+  .forge-mark .node { fill: var(--carbon); stroke: var(--indigo); stroke-width: 1; }
+  .forge-mark .link { stroke: var(--cyan); stroke-width: 0.4; opacity: 0.35; }
+  .forge-mark .core { fill: var(--indigo-bright); }
+  nav ul { display: flex; gap: 16px; list-style: none; margin-left: 16px; }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; font-family: var(--mono); transition: color .15s; }
+  nav a:hover { color: var(--text); }
+  nav a.active { color: var(--cyan-bright); }
+  nav .nav-meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+
+  .hero { padding: 80px 0 32px; position: relative; }
+  .hero::before { content: ''; position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(129,140,248,0.06), transparent 70%); pointer-events: none; }
+  .epigraph { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-bottom: 24px; letter-spacing: 0.08em; }
+  .epigraph .sep { margin: 0 10px; color: var(--border-bright); }
+  .hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(38px, 6vw, 56px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .hero h1 em { font-style: italic; }
+  .hero h1 .accent { font-style: italic; background: linear-gradient(135deg, var(--indigo-bright), var(--cyan-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .sub { font-size: 16px; color: var(--text-muted); max-width: 620px; line-height: 1.7; }
+
+  /* connection bar */
+  .conn { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 16px 0 8px; }
+  .conn input {
+    flex: 1; min-width: 260px; background: var(--carbon); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 13px; outline: none;
+  }
+  .conn input:focus { border-color: var(--indigo); }
+  .btn {
+    background: linear-gradient(135deg, var(--indigo), #6366f1); color: #fff; border: none; border-radius: 6px;
+    padding: 10px 18px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: filter .15s;
+  }
+  .btn:hover { filter: brightness(1.2); }
+  .btn.ghost { background: var(--carbon); color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  .btn.ghost:hover { border-color: var(--border-bright); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .status { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+  .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.err { background: var(--red); }
+  .dot.busy { background: var(--amber); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* layout */
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px 0 40px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--carbon); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .panel h2 { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 12px; }
+
+  .model-list { display: flex; flex-direction: column; gap: 6px; max-height: 520px; overflow-y: auto; }
+  .model-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .15s;
+    background: var(--carbon-light);
+  }
+  .model-item:hover { border-color: var(--indigo); }
+  .model-item.sel { border-color: var(--cyan); background: rgba(34,211,238,0.06); }
+  .model-item .name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .model-item .prov { font-size: 10px; font-family: var(--mono); color: var(--cyan-bright); text-transform: uppercase; letter-spacing: 0.08em; }
+  .empty { font-family: var(--mono); font-size: 12px; color: var(--text-dim); padding: 20px 0; text-align: center; }
+
+  .test-area { display: flex; flex-direction: column; gap: 12px; }
+  .test-area textarea {
+    width: 100%; background: var(--carbon-light); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 12px; min-height: 70px; outline: none; resize: vertical;
+  }
+  .test-area textarea:focus { border-color: var(--indigo); }
+  .test-actions { display: flex; gap: 8px; align-items: center; }
+  .test-actions label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); font-family: var(--mono); cursor: pointer; }
+  .test-actions input[type=checkbox] { accent-color: var(--cyan); }
+
+  .term { background: #0a0d13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .term-bar { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-bottom: 1px solid var(--border); background: var(--carbon-light); }
+  .tl { width: 9px; height: 9px; border-radius: 50%; background: var(--text-dim); }
+  .term-title { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-left: 8px; }
+  #output { padding: 14px; font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--text-muted); max-height: 320px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  #output .dim { color: var(--text-dim); }
+  #output .green { color: var(--green); }
+  #output .cyan { color: var(--cyan-bright); }
+  #output .red { color: var(--red); }
+  #output .amber { color: var(--amber); }
+
+  .hint { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .hint code { font-family: var(--mono); font-size: 11px; color: var(--cyan-bright); background: var(--carbon-light); padding: 1px 5px; border-radius: 4px; }
+
+  footer { padding: 40px 0 32px; border-top: 1px solid var(--border); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  footer .bottom { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+  footer .bottom a { color: var(--cyan-bright); text-decoration: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a class="logo" href="index.html">
+      <svg class="forge-mark" viewBox="0 0 24 24" fill="none"><polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/><line class="link" x1="12" y1="2" x2="12" y2="22"/><line class="link" x1="4" y1="7" x2="20" y2="17"/><line class="link" x1="20" y1="7" x2="4" y2="17"/><circle class="core" cx="12" cy="12" r="2.5"/></svg>
+      <em>AgentForge</em>
+    </a>
+    <ul>
+      <li><a href="index.html">home</a></li>
+      <li><a href="playground.html">playground</a></li>
+      <li><a href="aics-validator.html">validator</a></li>
+      <li><a href="compatibility.html">compatibility</a></li>
+      <li><a href="providers.html" class="active">providers</a></li>
+      <li><a href="https://github.com/AgentForgiT/agentforge">github</a></li>
+    </ul>
+    <div class="nav-meta">★ 42 · MIT</div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="epigraph">
+      <span>Sprint 24 · quick-win</span><span class="sep">·</span><span>live gateway view</span><span class="sep">·</span><span class="sep"></span><span>no keys</span>
+    </div>
+    <h1>Your gateway, <em class="accent">live</em>.</h1>
+    <p class="sub">The Provider Explorer reads a running AgentForge gateway's model registry and lets you test any model — streaming or not — straight from the browser. Everything happens on your machine.</p>
+    <div class="conn">
+      <input type="text" id="gwUrl" value="http://127.0.0.1:8080" spellcheck="false" placeholder="http://127.0.0.1:8080">
+      <button class="btn" onclick="connect()">Connect</button>
+      <div class="status"><span class="dot" id="dot"></span><span id="connText">not connected</span></div>
+    </div>
+    <div class="hint">Start a gateway locally with <code>python -m agentforge_gateway.cli --config apps/gateway/config.example.json</code>, then click Connect. The default config ships CORS-enabled for this site (ADR-0018).</div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="grid">
+    <div class="panel">
+      <h2>Models · /v1/models</h2>
+      <div class="model-list" id="models"><div class="empty">connect to see models</div></div>
+    </div>
+    <div class="panel">
+      <h2>Test model</h2>
+      <div class="test-area">
+        <div class="hint" id="selModel">select a model from the left</div>
+        <textarea id="prompt" spellcheck="false">Explain what AgentForge is in two sentences.</textarea>
+        <div class="test-actions">
+          <label><input type="checkbox" id="stream" checked> stream</label>
+          <button class="btn ghost" onclick="send()" id="sendBtn">Send → /v1/chat/completions</button>
+        </div>
+        <div class="term">
+          <div class="term-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span><span class="term-title">transcript</span></div>
+          <div id="output"><span class="dim">// waiting for a request…</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="bottom">Sprint 24 · built on AgentForge · <a href="https://agentforgit.github.io/agentforge-docs-site/">agentforgit.github.io</a></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+var gw = null;
+var models = [];
+var selected = null;
+var out = document.getElementById("output");
+var dot = document.getElementById("dot");
+var connText = document.getElementById("connText");
+
+function log(text, cls) {
+  var div = document.createElement("div");
+  if (cls) div.className = cls;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+function setConn(state, text) {
+  dot.className = "dot" + (state === "on" ? " on" : state === "err" ? " err" : state === "busy" ? " busy" : "");
+  connText.textContent = text;
+}
+function url() { return document.getElementById("gwUrl").value.replace(/\/+$/, ""); }
+
+async function connect() {
+  setConn("busy", "connecting…");
+  log("$ GET " + url() + "/v1/models", "dim");
+  try {
+    var res = await fetch(url() + "/v1/models", { mode: "cors" });
+    var body = await res.json();
+    if (!res.ok) throw new Error(JSON.stringify(body.error || body));
+    models = (body.data || []).map(function(m) { return { id: m.id }; });
+    gw = url();
+    renderModels();
+    setConn("on", models.length + " model(s) live");
+    log(models.length + " model(s) loaded", "green");
+  } catch (e) {
+    setConn("err", "unreachable");
+    log("failed: " + e.message, "red");
+  }
+}
+
+function renderModels() {
+  var list = document.getElementById("models");
+  list.innerHTML = "";
+  if (!models.length) {
+    list.innerHTML = '<div class="empty">no models registered</div>';
+    return;
+  }
+  models.forEach(function(m) {
+    var el = document.createElement("div");
+    el.className = "model-item";
+    var name = document.createElement("div");
+    name.className = "name";
+    name.textContent = m.id;
+    el.appendChild(name);
+    el.addEventListener("click", function() { selectModel(m, el); });
+    list.appendChild(el);
+  });
+}
+
+function selectModel(m, el) {
+  selected = m;
+  document.querySelectorAll(".model-item").forEach(function(n) { n.classList.remove("sel"); });
+  el.classList.add("sel");
+  document.getElementById("selModel").innerHTML = 'selected: <code style="font-family:var(--mono);color:var(--cyan-bright)">' + m.id + "</code>";
+}
+
+async function send() {
+  if (!selected) { log("select a model first", "amber"); return; }
+  var stream = document.getElementById("stream").checked;
+  var payload = { model: selected.id, stream: stream, messages: [{ role: "user", content: document.getElementById("prompt").value }] };
+  var btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  log("$ POST " + gw + "/v1/chat/completions -d {model: " + selected.id + ", stream: " + stream + "}", "dim");
+  try {
+    var res = await fetch(gw + "/v1/chat/completions", { method: "POST", mode: "cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (!stream) {
+      var body = await res.json();
+      if (body.error) { log(res.status + " " + JSON.stringify(body.error), "red"); return; }
+      var msg = body.choices && body.choices[0] && body.choices[0].message;
+      log("[assistant] " + (msg && msg.content != null ? msg.content : JSON.stringify(msg)), "cyan");
+      if (body.usage) log("usage: " + JSON.stringify(body.usage), "green");
+      return;
+    }
+    if (!res.ok || !res.headers.get("content-type") || res.headers.get("content-type").indexOf("text/event-stream") === -1) {
+      var errBody = await res.json().catch(function() { return {}; });
+      log(res.status + " " + JSON.stringify(errBody.error || errBody), "red");
+      return;
+    }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = "";
+    var content = "";
+    while (true) {
+      var r = await reader.read();
+      if (r.done) break;
+      buffer += decoder.decode(r.value, { stream: true });
+      var lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line.indexOf("data:") !== 0) continue;
+        var data = line.slice(5).trim();
+        if (data === "[DONE]") { log("[done]", "green"); continue; }
+        var chunk; try { chunk = JSON.parse(data); } catch (e) { continue; }
+        var delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+        var piece = delta && delta.content ? delta.content : "";
+        if (piece) {
+          content += piece;
+          var all = out.querySelectorAll("div");
+          var last = all[all.length - 1];
+          if (last && last.textContent.indexOf("[assistant]") === 0) last.textContent = "[assistant] " + content;
+          else log("[assistant] " + content, "cyan");
+          out.scrollTop = out.scrollHeight;
+        }
+      }
+    }
+  } catch (e) {
+    log("failed: " + e.message, "red");
+    setConn("err", "unreachable");
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
