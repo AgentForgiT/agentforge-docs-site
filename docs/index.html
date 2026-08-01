@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Forge body — dark canvas, forge accents */
     --abyss: #06080d;
     --carbon: #0c1019;
     --carbon-light: #111726;
@@ -24,87 +23,124 @@
     --cyan: #22d3ee;
     --cyan-bright: #67e8f9;
     --green: #34d399;
-    /* Cathedral type */
     --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
     --font: 'Inter', system-ui, sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
     background: var(--abyss); color: var(--text);
     font-family: var(--font); -webkit-font-smoothing: antialiased;
     line-height: 1.6; overflow-x: hidden;
   }
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-  a { color: inherit; }
+  /* Blueprint grid background — subtle engineering paper */
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(rgba(129,140,248,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(129,140,248,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
-  /* --- nav (forge minimal) --- */
+  /* --- cursor glow (forge heat) --- */
+  .cursor-glow {
+    position: fixed; width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(129,140,248,0.04), transparent 60%);
+    pointer-events: none; z-index: 0; transition: transform 0.1s ease-out;
+    transform: translate(-50%,-50%); will-change: transform;
+  }
+  @media (max-width: 768px) { .cursor-glow { display: none; } }
+
+  /* --- nav --- */
   nav {
     position: sticky; top: 0; z-index: 100;
     background: rgba(6,8,13,0.85); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
   nav .container { display: flex; align-items: center; height: 56px; gap: 24px; }
-  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
-  .logo .spark {
-    width: 16px; height: 16px; border-radius: 50%;
-    background: radial-gradient(circle, var(--cyan), var(--indigo));
-    box-shadow: 0 0 10px var(--indigo);
-    animation: pulse 3s ease-in-out infinite;
-  }
-  .logo em { font-family: var(--serif); font-style: italic; font-size: 18px; font-weight: 400; }
-  @keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 0 8px var(--indigo); } 50% { transform: scale(1.15); box-shadow: 0 0 16px var(--cyan); } }
-  nav ul { display: flex; gap: 18px; list-style: none; margin-left: 16px; }
-  nav a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; font-family: var(--mono); transition: color .15s; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; }
+  .logo em { font-family: var(--serif); font-style: italic; font-size: 19px; font-weight: 400; letter-spacing: -0.01em; }
+  /* Forge mark SVG */
+  .forge-mark { width: 22px; height: 22px; flex-shrink: 0; }
+  .forge-mark .node { fill: var(--carbon); stroke: var(--indigo); stroke-width: 1; transition: stroke .3s; }
+  .forge-mark .link { stroke: var(--cyan); stroke-width: 0.4; opacity: 0.35; }
+  .forge-mark .core { fill: var(--indigo-bright); }
+  .logo:hover .forge-mark .node { stroke: var(--cyan); }
+  .logo:hover .forge-mark .link { opacity: 0.7; }
+  nav ul { display: flex; gap: 16px; list-style: none; margin-left: 16px; }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; font-family: var(--mono); transition: color .15s; }
   nav a:hover { color: var(--text); }
   nav .nav-meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-dim); display: flex; gap: 12px; align-items: center; }
-  nav .nav-meta a { font-size: 11px; }
+  nav .nav-meta .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: heartbeat 2s ease-in-out infinite; }
+  @keyframes heartbeat { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-  /* --- hero (cathedral voice on forge body) --- */
-  .hero { padding: 120px 0 72px; position: relative; }
+  /* --- hero --- */
+  .hero { padding: 120px 0 64px; position: relative; }
   .hero::before {
     content: ''; position: absolute; top: 30%; left: 50%; transform: translate(-50%,-50%);
-    width: 600px; height: 600px; background: radial-gradient(circle, rgba(129,140,248,0.05), transparent 70%);
+    width: 600px; height: 600px; background: radial-gradient(circle, rgba(129,140,248,0.06), transparent 70%);
     pointer-events: none;
   }
   .epigraph {
     font-family: var(--mono); font-size: 10px; color: var(--text-muted);
-    text-align: center; margin-bottom: 36px; letter-spacing: 0.08em;
+    text-align: center; margin-bottom: 32px; letter-spacing: 0.08em;
+    opacity: 0; animation: fadeIn 0.8s 0.1s forwards;
   }
   .epigraph .sep { margin: 0 10px; color: var(--border-bright); }
   .epigraph .live { color: var(--green); }
   .epigraph .live::before { content: '● '; font-size: 8px; }
   .hero h1 {
     font-family: var(--serif); font-weight: 400;
-    font-size: clamp(44px, 8vw, 72px); line-height: 1.05; letter-spacing: -0.02em;
-    text-align: center; max-width: 820px; margin: 0 auto 28px;
+    font-size: clamp(48px, 9vw, 84px); line-height: 1.02; letter-spacing: -0.025em;
+    text-align: center; max-width: 880px; margin: 0 auto 28px;
+    opacity: 0; animation: fadeIn 0.8s 0.2s forwards;
   }
   .hero h1 em { font-style: italic; }
-  .hero h1 .accent { font-style: italic; background: linear-gradient(135deg, var(--indigo-bright), var(--cyan-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .hero .sub {
-    text-align: center; font-size: 17px; color: var(--text-muted); max-width: 560px;
-    margin: 0 auto 36px; line-height: 1.7;
+  .hero h1 .accent {
+    font-style: italic; position: relative;
+    background: linear-gradient(135deg, var(--indigo-bright), var(--cyan-bright));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .hero .actions { display: flex; gap: 12px; justify-content: center; }
+  .hero h1 .accent::after {
+    content: ''; position: absolute; bottom: 4px; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--indigo), var(--cyan), transparent);
+    transform: scaleX(0); transform-origin: left;
+    animation: drawLine 1s 1s ease-out forwards;
+  }
+  @keyframes drawLine { to { transform: scaleX(1); } }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .hero .sub {
+    text-align: center; font-size: 18px; color: var(--text-muted); max-width: 580px;
+    margin: 0 auto 36px; line-height: 1.7;
+    opacity: 0; animation: fadeIn 0.8s 0.4s forwards;
+  }
+  .hero .actions { display: flex; gap: 12px; justify-content: center;
+    opacity: 0; animation: fadeIn 0.8s 0.6s forwards; }
   .btn-primary {
     background: linear-gradient(135deg, var(--indigo), #6366f1);
-    color: #fff; padding: 11px 22px; border-radius: 6px; border: none;
+    color: #fff; padding: 12px 24px; border-radius: 6px; border: none;
     font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer;
-    text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s, box-shadow .2s;
+    box-shadow: 0 0 0 rgba(129,140,248,0);
   }
-  .btn-primary:hover { filter: brightness(1.2); }
+  .btn-primary:hover { filter: brightness(1.2); box-shadow: 0 0 28px rgba(129,140,248,0.3); }
   .btn-ghost {
-    background: transparent; color: var(--text); padding: 11px 22px; border-radius: 6px;
+    background: transparent; color: var(--text); padding: 12px 24px; border-radius: 6px;
     border: 1px solid var(--border); font-size: 14px; font-weight: 500; cursor: pointer;
     text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
     transition: border-color .15s, background .15s;
   }
   .btn-ghost:hover { border-color: var(--border-bright); background: var(--carbon); }
 
-  /* --- terminal hero (forge kinetic) --- */
+  /* --- terminal hero (type-on animation) --- */
   .terminal {
-    margin-top: 56px; background: var(--carbon); border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden; max-width: 680px; margin-left: auto; margin-right: auto;
+    margin-top: 52px; background: var(--carbon); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; max-width: 660px; margin-left: auto; margin-right: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(129,140,248,0.05);
+    opacity: 0; animation: fadeIn 0.8s 0.8s forwards;
   }
   .terminal-bar {
     display: flex; align-items: center; gap: 6px; padding: 10px 14px;
@@ -112,16 +148,18 @@
   }
   .tl { width: 10px; height: 10px; border-radius: 50%; background: var(--text-dim); }
   .terminal-title { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-left: 8px; }
-  .terminal-body { padding: 18px; font-family: var(--mono); font-size: 13px; line-height: 1.8; color: var(--text-muted); }
+  .terminal-body { padding: 18px; font-family: var(--mono); font-size: 13px; line-height: 1.85; color: var(--text-muted); min-height: 230px; }
+  .terminal-body .line { white-space: pre-wrap; }
   .terminal-body .cmd { color: var(--cyan-bright); }
   .terminal-body .out { color: var(--text); }
   .terminal-body .ok { color: var(--green); }
   .terminal-body .dim { color: var(--text-dim); }
+  .terminal-body .stream { color: var(--cyan); opacity: 0.85; }
   .terminal-body .blink { display: inline-block; width: 8px; height: 14px; background: var(--indigo); vertical-align: middle; animation: blink 1s steps(2) infinite; }
   @keyframes blink { to { opacity: 0; } }
 
-  /* --- prose sections (cathedral asides) --- */
-  .prose { padding: 72px 0; border-top: 1px solid var(--border); }
+  /* --- prose sections --- */
+  .prose { padding: 80px 0; border-top: 1px solid var(--border); }
   .prose .container { display: grid; grid-template-columns: 200px 1fr; gap: 48px; }
   @media (max-width: 768px) { .prose .container { grid-template-columns: 1fr; gap: 20px; } }
   .prose .aside {
@@ -131,10 +169,10 @@
   }
   .prose .aside .num {
     display: block; font-family: var(--serif); font-style: italic;
-    font-size: 22px; color: var(--indigo-bright); margin-bottom: 6px;
+    font-size: 24px; color: var(--indigo-bright); margin-bottom: 6px;
     letter-spacing: 0; text-transform: none;
   }
-  .prose h2 { font-family: var(--serif); font-weight: 400; font-size: 34px; line-height: 1.15; margin-bottom: 18px; letter-spacing: -0.01em; }
+  .prose h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; line-height: 1.15; margin-bottom: 18px; letter-spacing: -0.01em; }
   .prose h2 em { font-style: italic; color: var(--cyan-bright); }
   .prose p { font-size: 16px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
   .prose p strong { color: var(--text); font-weight: 500; }
@@ -143,42 +181,62 @@
     display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 10px;
     border: 1px solid var(--border-bright); border-radius: 9999px; color: var(--indigo-bright);
     margin: 4px 4px 0 0; text-transform: uppercase; letter-spacing: 0.08em;
+    transition: border-color .15s, color .15s;
   }
+  .prose .pill:hover { border-color: var(--indigo); color: var(--cyan-bright); }
 
-  /* --- provider flow (forge diagram, intersitial) --- */
-  .providers { padding: 72px 0; border-top: 1px solid var(--border); }
+  /* --- provider flow (animated circuit) --- */
+  .providers { padding: 80px 0; border-top: 1px solid var(--border); }
   .providers .head { text-align: center; margin-bottom: 48px; }
-  .providers h2 { font-family: var(--serif); font-weight: 400; font-size: 34px; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .providers h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; letter-spacing: -0.01em; margin-bottom: 8px; }
   .providers h2 em { font-style: italic; }
   .providers .sub { color: var(--text-muted); font-size: 15px; }
-  .provider-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 16px; }
-  @media (max-width: 900px) { .provider-flow { grid-template-columns: 1fr; gap: 20px; } }
+  .provider-flow {
+    display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: center; gap: 0;
+  }
+  @media (max-width: 900px) { .provider-flow { grid-template-columns: 1fr; gap: 16px; } }
   .provider-node {
     background: var(--carbon); border: 1px solid var(--border); border-radius: 10px; padding: 24px;
-    text-align: center; transition: border-color .2s, box-shadow .2s;
+    text-align: center; transition: border-color .2s, box-shadow .2s; position: relative;
   }
   .provider-node.active {
     border-color: var(--cyan);
-    box-shadow: 0 0 24px rgba(34,211,238,0.1);
+    box-shadow: 0 0 24px rgba(34,211,238,0.12), inset 0 0 0 1px rgba(34,211,238,0.1);
   }
   .provider-node .label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 8px; }
   .provider-node .name { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
   .provider-node .desc { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
   .provider-node .desc code { font-family: var(--mono); font-size: 11px; color: var(--green); background: var(--carbon-light); padding: 1px 4px; border-radius: 3px; }
-  .arrow { color: var(--cyan); font-size: 20px; font-family: var(--mono); }
-  @media (max-width: 900px) { .arrow { display: none; } }
+  /* Circuit arrows with animated signal */
+  .circuit {
+    height: 40px; position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .circuit svg { width: 100%; height: 2px; overflow: visible; }
+  .circuit .track { stroke: var(--border-bright); stroke-width: 1; }
+  .circuit .signal {
+    stroke: var(--cyan); stroke-width: 1.5; stroke-dasharray: 8 80; stroke-dashoffset: 0;
+    animation: signal 2.5s linear infinite; filter: drop-shadow(0 0 3px var(--cyan));
+  }
+  @keyframes signal { to { stroke-dashoffset: -88; } }
+  @media (max-width: 900px) { .circuit { display: none; } }
 
-  /* --- triptych (cathedral pillars + seals) --- */
-  .triptych { padding: 72px 0; border-top: 1px solid var(--border); }
+  /* --- triptych --- */
+  .triptych { padding: 80px 0; border-top: 1px solid var(--border); }
   .triptych .head { text-align: center; margin-bottom: 48px; }
-  .triptych h2 { font-family: var(--serif); font-weight: 400; font-size: 34px; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .triptych h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; letter-spacing: -0.01em; margin-bottom: 8px; }
   .triptych h2 em { font-style: italic; color: var(--indigo-bright); }
   .triptych .sub { color: var(--text-muted); font-size: 15px; }
   .triptych .container { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
   @media (max-width: 900px) { .triptych .container { grid-template-columns: 1fr; } }
-  .panel { background: var(--carbon); border: 1px solid var(--border); border-radius: 10px; padding: 28px 24px; transition: border-color .2s, transform .2s; }
-  .panel:hover { border-color: var(--indigo); transform: translateY(-2px); }
-  .panel .ord { font-family: var(--serif); font-style: italic; font-size: 26px; color: var(--indigo-bright); margin-bottom: 14px; }
+  .panel { background: var(--carbon); border: 1px solid var(--border); border-radius: 10px; padding: 28px 24px; transition: border-color .2s, transform .2s; position: relative; overflow: hidden; }
+  .panel:hover { border-color: var(--indigo); transform: translateY(-3px); }
+  .panel::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--indigo), transparent);
+    transform: scaleX(0); transition: transform .3s;
+  }
+  .panel:hover::before { transform: scaleX(1); }
+  .panel .ord { font-family: var(--serif); font-style: italic; font-size: 28px; color: var(--indigo-bright); margin-bottom: 14px; }
   .panel h3 { font-family: var(--serif); font-weight: 400; font-size: 22px; margin-bottom: 10px; letter-spacing: -0.01em; }
   .panel p { font-size: 14px; color: var(--text-muted); line-height: 1.65; }
   .panel p code { font-family: var(--mono); font-size: 12px; color: var(--cyan-bright); background: var(--carbon-light); padding: 1px 5px; border-radius: 4px; }
@@ -187,18 +245,23 @@
     text-transform: uppercase; letter-spacing: 0.12em;
     margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border);
   }
+  .panel a { color: var(--cyan-bright); text-decoration: none; }
 
-  /* --- relics (cathedral verdict) --- */
+  /* --- reliquary --- */
   .relics { padding: 96px 0; text-align: center; border-top: 1px solid var(--border); position: relative; }
   .relics::before {
     content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 400px; height: 400px; background: radial-gradient(circle, rgba(129,140,248,0.04), transparent 70%);
+    width: 400px; height: 400px; background: radial-gradient(circle, rgba(129,140,248,0.05), transparent 70%);
     pointer-events: none;
   }
   .relics .label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 12px; }
-  .relics .num { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 88px; color: var(--indigo-bright); letter-spacing: -0.04em; line-height: 1; }
+  .relics .num { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: 96px; color: var(--indigo-bright); letter-spacing: -0.04em; line-height: 1; }
   .relics p { font-size: 16px; color: var(--text-muted); max-width: 500px; margin: 20px auto 0; line-height: 1.7; }
   .relics p code { font-family: var(--mono); font-size: 13px; color: var(--green); background: var(--carbon); padding: 1px 5px; border-radius: 4px; }
+
+  /* --- scroll reveal --- */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
 
   /* --- footer --- */
   footer { padding: 48px 0 40px; border-top: 1px solid var(--border); }
@@ -207,17 +270,31 @@
   footer .col a { display: block; color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 3px 0; transition: color .15s; }
   footer .col a:hover { color: var(--text); }
   footer .bottom { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+  footer .bottom a { color: var(--cyan-bright); text-decoration: none; }
 
   /* --- reduced motion --- */
   @media (prefers-reduced-motion: reduce) {
-    .logo .spark, .terminal-body .blink { animation: none; }
+    *, *::before, *::after { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
   }
 </style>
 </head>
 <body>
+<div class="cursor-glow" id="glow"></div>
+
 <nav>
   <div class="container">
-    <div class="logo"><span class="spark"></span> <em>AgentForge</em></div>
+    <a href="/" class="logo" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px;">
+      <svg class="forge-mark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- hexagonal forge mark: interlocking nodes -->
+        <polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/>
+        <line class="link" x1="12" y1="2" x2="12" y2="22"/>
+        <line class="link" x1="4" y1="7" x2="20" y2="17"/>
+        <line class="link" x1="20" y1="7" x2="4" y2="17"/>
+        <circle class="core" cx="12" cy="12" r="2.5"/>
+      </svg>
+      <em>AgentForge</em>
+    </a>
     <ul>
       <li><a href="../gateway.md">gateway</a></li>
       <li><a href="../cli.md">cli</a></li>
@@ -226,7 +303,7 @@
       <li><a href="../aics-validator.html">validator</a></li>
       <li><a href="https://github.com/AgentForgiT/agentforge">github</a></li>
     </ul>
-    <div class="nav-meta"><span>★ 42</span> <span>MIT</span></div>
+    <div class="nav-meta"><span class="live-dot"></span> gateway live · <span>★ 42</span> · <span>MIT</span></div>
   </div>
 </nav>
 
@@ -252,25 +329,13 @@
         <span class="tl"></span><span class="tl"></span><span class="tl"></span>
         <span class="terminal-title">forge — bash</span>
       </div>
-      <div class="terminal-body">
-<span class="dim">$</span> <span class="cmd">agentforge init-context</span>
-<span class="ok">✓ scaffolded .agentforge/ with AICS v0.1</span>
-<span class="dim">$</span> <span class="cmd">agentforge validate-context</span>
-<span class="ok">✓ AICS VALID — 8 files, 5 directories</span>
-<span class="dim">$</span> <span class="cmd">gateway --config config.example.json</span>
-<span class="out">AgentForge Gateway listening on http://127.0.0.1:8080</span>
-<span class="dim">$</span> <span class="cmd">curl /v1/chat/completions -d '{"model":"local-llama3","stream":true,...}'</span>
-<span class="out">data: {"model":"local-llama3","choices":[{"delta":{"content":"Good"}}]}</span>
-<span class="out">data: {"choices":[{"delta":{"content":" day"}}]}</span>
-<span class="ok">data: [DONE]</span>
-<span class="dim">$</span> <span class="blink"></span>
-      </div>
+      <div class="terminal-body" id="terminal"></div>
     </div>
   </div>
 </section>
 
 <!-- CATHEDRAL: governance -->
-<section class="prose">
+<section class="prose reveal">
   <div class="container">
     <div class="aside">
       <span class="num">i.</span>
@@ -286,7 +351,7 @@
 </section>
 
 <!-- BAZAAR: vendor-neutral -->
-<section class="prose">
+<section class="prose reveal">
   <div class="container">
     <div class="aside">
       <span class="num">ii.</span>
@@ -300,8 +365,8 @@
   </div>
 </section>
 
-<!-- PROVIDER FLOW (forge diagram) -->
-<section class="providers">
+<!-- PROVIDER FLOW -->
+<section class="providers reveal">
   <div class="container">
     <div class="head">
       <h2>One API. <em>Any provider.</em></h2>
@@ -313,13 +378,23 @@
         <div class="name">OpenRouter</div>
         <div class="desc">frontier models, live-verified</div>
       </div>
-      <div class="arrow">→</div>
+      <div class="circuit">
+        <svg viewBox="0 0 60 2" preserveAspectRatio="none">
+          <line class="track" x1="0" y1="1" x2="60" y2="1"/>
+          <line class="signal" x1="0" y1="1" x2="60" y2="1"/>
+        </svg>
+      </div>
       <div class="provider-node active">
         <div class="label">GATEWAY · 0.0.21</div>
         <div class="name">AgentForge</div>
         <div class="desc"><code>/v1</code>, alias normalization, CORS</div>
       </div>
-      <div class="arrow">→</div>
+      <div class="circuit">
+        <svg viewBox="0 0 60 2" preserveAspectRatio="none">
+          <line class="track" x1="0" y1="1" x2="60" y2="1"/>
+          <line class="signal" x1="0" y1="1" x2="60" y2="1"/>
+        </svg>
+      </div>
       <div class="provider-node">
         <div class="label">LOCAL · Sprint 20</div>
         <div class="name">Ollama</div>
@@ -329,8 +404,8 @@
   </div>
 </section>
 
-<!-- TRIPTYCH: three pillars -->
-<section class="triptych">
+<!-- TRIPTYCH -->
+<section class="triptych reveal">
   <div class="container">
     <div class="head">
       <h2>The platform has <em>three pillars</em></h2>
@@ -347,23 +422,23 @@
     <div class="panel">
       <div class="ord">ii.</div>
       <h3>AICS</h3>
-      <p>The AgentForge Context Specification — a portable, filesystem-anchored project context that humans and AI tools both read. Validate from the CLI, or from the <a href="../aics-validator.html" style="color:var(--cyan-bright)">in-browser WASM validator</a>.</p>
+      <p>The AgentForge Context Specification — a portable, filesystem-anchored project context. Validate from the CLI, or from the <a href="../aics-validator.html">in-browser WASM validator</a>.</p>
       <div class="seal">specs/aics-v0.1 · ADR-0005</div>
     </div>
     <div class="panel">
       <div class="ord">iii.</div>
       <h3>The CLI</h3>
-      <p>Validate, scaffold, explain, and diagnose AICS contexts from the terminal — <code>validate-context</code>, <code>init-context</code>, <code>explain-context</code>, <code>doctor</code>. Same checks CI runs on every push.</p>
+      <p>Validate, scaffold, explain, and diagnose AICS contexts — <code>validate</code>, <code>init</code>, <code>explain</code>, <code>doctor</code>. Same checks CI runs on every push.</p>
       <div class="seal">apps/cli · ADR-0003</div>
     </div>
   </div>
 </section>
 
-<!-- RELIQUARY: the verdict -->
-<section class="relics">
+<!-- RELIQUARY -->
+<section class="relics reveal">
   <div class="container">
     <div class="label">Genesis sprints shipped</div>
-    <div class="num">21</div>
+    <div class="num" id="sprint-count">0</div>
     <p>Twenty-one governed milestones, each released as a <code>Genesis-0.0.x</code> tag with requirements, ADR, implementation, tests, CI validation, and release notes — all offline, all reproducible from a fresh clone.</p>
   </div>
 </section>
@@ -372,7 +447,10 @@
 <footer>
   <div class="container">
     <div class="col">
-      <div class="logo" style="margin-bottom:12px"><span class="spark"></span> <em>AgentForge</em></div>
+      <div class="logo" style="margin-bottom:12px">
+        <svg class="forge-mark" viewBox="0 0 24 24" fill="none"><polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/><line class="link" x1="12" y1="2" x2="12" y2="22"/><line class="link" x1="4" y1="7" x2="20" y2="17"/><line class="link" x1="20" y1="7" x2="4" y2="17"/><circle class="core" cx="12" cy="12" r="2.5"/></svg>
+        <em>AgentForge</em>
+      </div>
       <p style="font-size:13px;color:var(--text-muted);max-width:300px;line-height:1.6">Open engineering platform for agentic AI systems. MIT-licensed. Governance-first.</p>
     </div>
     <div class="col"><h4>product</h4><a href="../gateway.md">Gateway</a><a href="../cli.md">CLI</a><a href="../aics.md">AICS</a><a href="../playground.html">Playground</a><a href="../aics-validator.html">Validator</a></div>
@@ -380,8 +458,104 @@
     <div class="col"><h4>community</h4><a href="https://github.com/AgentForgiT/agentforge">GitHub</a><a href="https://github.com/AgentForgiT/agentforge-handbook">Handbook</a><a href="../contributing.md">Contributing</a><a href="../governance.md">Governance</a></div>
   </div>
   <div class="container">
-    <div class="bottom">Genesis-0.0.21 · MIT · built on AgentForge · <a href="https://agentforgit.github.io/agentforge-docs-site/" style="color:var(--cyan-bright);text-decoration:none">agentforgit.github.io</a></div>
+    <div class="bottom">Genesis-0.0.21 · MIT · built on AgentForge · <a href="https://agentforgit.github.io/agentforge-docs-site/">agentforgit.github.io</a></div>
   </div>
 </footer>
+
+<script>
+(function() {
+  "use strict";
+
+  // --- Cursor glow (forge heat) ---
+  var glow = document.getElementById('glow');
+  if (glow && window.matchMedia('(pointer: fine)').matches) {
+    document.addEventListener('mousemove', function(e) { glow.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px) translate(-50%,-50%)'; });
+  }
+
+  // --- Scroll reveal ---
+  var reveals = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); } });
+    }, { threshold: 0.12 });
+    reveals.forEach(function(el) { io.observe(el); });
+  } else {
+    reveals.forEach(function(el) { el.classList.add('in'); });
+  }
+
+  // --- Sprint count-up ---
+  var countEl = document.getElementById('sprint-count');
+  if (countEl && 'IntersectionObserver' in window) {
+    var counted = false;
+    var io2 = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting && !counted) {
+          counted = true;
+          var n = 0; var target = 21;
+          var step = function() { n++; countEl.textContent = n; if (n < target) setTimeout(step, 80); };
+          step();
+          io2.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    io2.observe(countEl);
+  } else if (countEl) { countEl.textContent = '21'; }
+
+  // --- Terminal type-on animation ---
+  var term = document.getElementById('terminal');
+  if (!term) return;
+  var lines = [
+    { t: '$ ', c: 'cmd', text: 'agentforge init-context' },
+    { t: '', c: 'ok', text: '✓ scaffolded .agentforge/ with AICS v0.1' },
+    { t: '$ ', c: 'cmd', text: 'agentforge validate-context' },
+    { t: '', c: 'ok', text: '✓ AICS VALID — 8 files, 5 directories' },
+    { t: '$ ', c: 'cmd', text: 'gateway --config config.example.json' },
+    { t: '', c: 'out', text: 'AgentForge Gateway listening on http://127.0.0.1:8080' },
+    { t: '$ ', c: 'cmd', text: 'curl /v1/chat/completions -d \'{"model":"local-llama3",...}\'' },
+    { t: '', c: 'stream', text: 'data: {"choices":[{"delta":{"content":"Good day to you."}}]}' },
+    { t: '', c: 'ok', text: 'data: [DONE]' },
+  ];
+
+  var idx = 0, charIdx = 0, currentLine = null;
+  function typeNext() {
+    if (idx >= lines.length) {
+      // Done — add blinking cursor
+      var cursor = document.createElement('span');
+      cursor.className = 'blink';
+      term.appendChild(cursor);
+      return;
+    }
+    var line = lines[idx];
+    if (charIdx === 0) {
+      currentLine = document.createElement('div');
+      currentLine.className = 'line';
+      if (line.t) {
+        var prompt = document.createElement('span');
+        prompt.className = 'dim';
+        prompt.textContent = line.t;
+        currentLine.appendChild(prompt);
+      }
+      term.appendChild(currentLine);
+    }
+    if (charIdx < line.text.length) {
+      var span = currentLine.querySelector('.typed');
+      if (!span) {
+        span = document.createElement('span');
+        span.className = line.c;
+        currentLine.appendChild(span);
+      }
+      span.textContent += line.text[charIdx];
+      charIdx++;
+      var delay = line.c === 'cmd' ? 45 : 12;
+      setTimeout(typeNext, delay);
+    } else {
+      idx++; charIdx = 0; currentLine = null;
+      setTimeout(typeNext, line.c === 'cmd' ? 300 : 150);
+    }
+  }
+  // Start after hero fade-in
+  setTimeout(typeNext, 1000);
+})();
+</script>
 </body>
 </html>
