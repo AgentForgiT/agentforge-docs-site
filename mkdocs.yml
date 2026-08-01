@@ -17,7 +17,7 @@ markdown_extensions:
   - codehilite
   - tables
 nav:
-  - Home: index.md
+  - Home: index.html
   - Playground: playground.html
   - AICS Validator: aics-validator.html
   - Getting Started: getting-started.md
