@@ -1,0 +1,195 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-08-02T09:02:32+00:00",
+  "aics_version": "0.2",
+  "profile": {
+    "project_name": "agentforge",
+    "repo_root": "https://github.com/AgentForgiT/agentforge",
+    "aics_level": 3
+  },
+  "governance": {
+    "constitution": ".agentforge/constitution.md",
+    "charter": ".agentforge/charter.md",
+    "decisions": ".agentforge/decisions.md",
+    "architecture": ".agentforge/architecture.md",
+    "repo_map": ".agentforge/repo-map.md",
+    "agents": ".agentforge/agents/AGENTS.md",
+    "adr_count": 29,
+    "rfc_count": 1,
+    "decision_register": [
+      {
+        "id": "ADR-0001",
+        "date": "2026-06-28",
+        "title": "Start with a modular monorepo"
+      },
+      {
+        "id": "ADR-0002",
+        "date": "2026-06-28",
+        "title": "Place Gateway in `apps/gateway` with provider adapter boundary"
+      },
+      {
+        "id": "ADR-0003",
+        "date": "2026-06-28",
+        "title": "Place canonical CLI in `apps/cli` with shared validation boundary"
+      },
+      {
+        "id": "ADR-0004",
+        "date": "2026-06-28",
+        "title": "Package the canonical CLI from `apps/cli` with editable install first"
+      },
+      {
+        "id": "ADR-0005",
+        "date": "2026-06-29",
+        "title": "Scaffold AICS context from packaged templates with safe no-overwrite initialization"
+      },
+      {
+        "id": "ADR-0006",
+        "date": "2026-06-29",
+        "title": "Explain AICS context through a read-only orientation report with validation-informed status"
+      },
+      {
+        "id": "ADR-0007",
+        "date": "2026-06-29",
+        "title": "Diagnose local AICS context health with read-only doctor checks"
+      },
+      {
+        "id": "ADR-0008",
+        "date": "2026-07-03",
+        "title": "Harden Gateway provider adapters behind an internal module boundary"
+      },
+      {
+        "id": "ADR-0009",
+        "date": "2026-07-04",
+        "title": "Validate Gateway providers through offline contract tests"
+      },
+      {
+        "id": "ADR-0010",
+        "date": "2026-07-05",
+        "title": "Separate Gateway chat completion request validation"
+      },
+      {
+        "id": "ADR-0011",
+        "date": "2026-07-05",
+        "title": "Centralize Gateway JSON error responses"
+      },
+      {
+        "id": "ADR-0012",
+        "date": "2026-07-06",
+        "title": "Normalize Gateway chat completion responses"
+      },
+      {
+        "id": "ADR-0013",
+        "date": "2026-07-10",
+        "title": "Validate Gateway configuration explicitly"
+      },
+      {
+        "id": "ADR-0014",
+        "date": "2026-07-24",
+        "title": "Add OpenAI-compatible SSE streaming with gateway-owned chunk normalization"
+      },
+      {
+        "id": "ADR-0015",
+        "date": "2026-07-31",
+        "title": "Add structured access logging with configurable log level"
+      },
+      {
+        "id": "ADR-0016",
+        "date": "2026-08-01",
+        "title": "Accept null content from reasoning models with field passthrough"
+      },
+      {
+        "id": "ADR-0017",
+        "date": "2026-08-01",
+        "title": "Add keyless Ollama provider over the OpenAI-compatible local surface"
+      },
+      {
+        "id": "ADR-0018",
+        "date": "2026-08-01",
+        "title": "Add opt-in CORS support for browser clients"
+      },
+      {
+        "id": "ADR-0019",
+        "date": "2026-08-01",
+        "title": "Translate Anthropic Messages at the inbound boundary"
+      },
+      {
+        "id": "ADR-0020",
+        "date": "2026-08-01",
+        "title": "Map Anthropic thinking and tool-use at the inbound boundary"
+      },
+      {
+        "id": "ADR-0021",
+        "date": "2026-08-01",
+        "title": "Add the Anthropic outbound provider adapter"
+      },
+      {
+        "id": "ADR-0022",
+        "date": "2026-08-01",
+        "title": "Adopt YAML front matter for AICS v0.2"
+      },
+      {
+        "id": "ADR-0023",
+        "date": "2026-08-01",
+        "title": "Add opt-in API-key auth and rate limiting"
+      },
+      {
+        "id": "ADR-0024",
+        "date": "2026-08-01",
+        "title": "Adopt v0.2-first scaffolds, additive migration, and a front matter schema"
+      },
+      {
+        "id": "ADR-0025",
+        "date": "2026-08-01",
+        "title": "Add a dependency-free Python SDK client"
+      },
+      {
+        "id": "ADR-0026",
+        "date": "2026-08-01",
+        "title": "Expose gateway capabilities as MCP tools"
+      },
+      {
+        "id": "ADR-0027",
+        "date": "2026-08-01",
+        "title": "Distribute the SDK via tag-gated PyPI publish and release assets"
+      },
+      {
+        "id": "ADR-0028",
+        "date": "2026-08-01",
+        "title": "Build the engineering twin as a generated read-only profile"
+      }
+    ]
+  },
+  "gateway": {
+    "models": [
+      {
+        "alias": "anthropic-sonnet",
+        "provider": "anthropic",
+        "provider_model": "claude-sonnet-4-5"
+      },
+      {
+        "alias": "mock-coder",
+        "provider": "mock",
+        "provider_model": "mock-coder-v1"
+      }
+    ],
+    "providers": [
+      "anthropic",
+      "mock"
+    ],
+    "surfaces": [
+      "/health",
+      "/v1/models",
+      "/v1/chat/completions",
+      "/v1/messages",
+      "/mcp"
+    ],
+    "config_files": [
+      "apps/gateway/config.anthropic.example.json",
+      "apps/gateway/config.auth.example.json",
+      "apps/gateway/config.example.json",
+      "apps/gateway/config.ollama.example.json",
+      "apps/gateway/config.openrouter.example.json",
+      "apps/gateway/config.playground.live.json"
+    ]
+  }
+}
