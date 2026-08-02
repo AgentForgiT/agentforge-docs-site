@@ -183,10 +183,10 @@
 <section class="hero">
   <div class="container">
     <div class="epigraph">
-      <span>Sprint 22</span><span class="sep">·</span><span>verified interoperability</span><span class="sep">·</span><span class="live">● live data</span>
+      <span>Genesis 0.0.24</span><span class="sep">·</span><span>verified interoperability</span><span class="sep">·</span><span class="live">● live data</span>
     </div>
     <h1>Which tool works with <em class="accent">which provider?</em></h1>
-    <p class="sub">Every claim below traces to a public source or to AgentForge's own live verification — Sprint 19 against real OpenRouter, Sprint 20 against a real Ollama daemon. No invented compatibility.</p>
+    <p class="sub">Every claim below traces to a public source or to AgentForge's own live verification — Sprint 19 against real OpenRouter, Sprint 20 against a real Ollama daemon, Sprint 25 against the Anthropic wire path. No invented compatibility.</p>
     <div class="controls">
       <div class="legend">
         <span class="item"><span class="chip native"></span> native</span>
@@ -250,11 +250,11 @@
 var TOOLS = [
   {
     name: "Claude Code",
-    src: "anthropics/claude-code#216 + claudeapi.com guide",
-    url: "https://github.com/anthropics/claude-code/issues/216",
-    statuses: { openai: "adapter", anthropic: "native", gemini: "adapter", openrouter: "adapter", ollama: "adapter", gateway: "adapter" },
-    verdict: "<strong>Speaks the Anthropic Messages API</strong> — not OpenAI-compatible natively. Point <code>ANTHROPIC_BASE_URL</code> at any Anthropic-compatible endpoint. For non-Anthropic providers you need a protocol bridge (e.g. claude-code-router) — the AgentForge Gateway currently exposes OpenAI-compatible <code>/v1</code>.",
-    config: "# ~/.claude/settings.json — Anthropic-compatible backend\n{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"https://your-anthropic-compatible.endpoint\",\n    \"ANTHROPIC_API_KEY\": \"sk-...\"\n  }\n}\n\n# note: gateway exposes OpenAI-compatible /v1;\n# an Anthropic-protocol adapter is required to bridge."
+    src: "AgentForge ADR-0019/0020 (inbound Anthropic surface) + anthropics/claude-code#216",
+    url: "https://github.com/AgentForgiT/agentforge",
+    statuses: { openai: "adapter", anthropic: "native", gemini: "adapter", openrouter: "adapter", ollama: "adapter", gateway: "config" },
+    verdict: "<strong>Speaks the Anthropic Messages API.</strong> Since Sprint 23, the AgentForge Gateway exposes <code>/v1/messages</code> (ADR-0019) with full tool-use mapping (ADR-0020) — so Claude Code points <code>ANTHROPIC_BASE_URL</code> at the gateway and reaches <em>every</em> provider behind it: mock, Ollama, OpenRouter, Anthropic itself. No third-party bridge needed.",
+    config: "# ~/.claude/settings.json — Claude Code through the AgentForge Gateway\n{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"http://127.0.0.1:8080\",\n    \"ANTHROPIC_API_KEY\": \"any-non-empty-value\"\n  }\n}\n\n# the gateway speaks Anthropic Messages (Sprint 23-24):\n# tools, tool_use, tool_result, streaming all mapped (ADR-0019/0020)\n# then select a gateway alias as the model, e.g. local-llama3"
   },
   {
     name: "Codex CLI",
@@ -290,11 +290,11 @@ var TOOLS = [
   },
   {
     name: "AgentForge Gateway",
-    src: "AgentForge ADR-0017/0018 + Sprint 19/20 live verification",
+    src: "AgentForge ADRs 0017-0021 + Sprint 19-25 live/wire verification",
     url: "https://github.com/AgentForgiT/agentforge",
-    statuses: { openai: "config", anthropic: "adapter", gemini: "config", openrouter: "config", ollama: "native", gateway: "native" },
-    verdict: "<strong>The unification layer itself.</strong> OpenAI-compatible <code>/v1</code> with <code>mock</code>, keyless <code>ollama</code>, and <code>openrouter</code> providers behind model aliases. Streaming, CORS, 136 offline tests, live-verified against both OpenRouter (Sprint 19) and Ollama (Sprint 20).",
-    config: "# config.example.json — run once, use everywhere\n{\n  \"server\": { \"host\": \"127.0.0.1\", \"port\": 8080,\n               \"cors_origin\": \"https://agentforgit.github.io\" },\n  \"models\": {\n    \"mock-coder\":    { \"provider\": \"mock\", \"provider_model\": \"mock-coder-v1\" },\n    \"local-llama3\":  { \"provider\": \"ollama\", \"provider_model\": \"llama3.2\" }\n  },\n  \"providers\": {\n    \"mock\": { \"type\": \"mock\" },\n    \"ollama\": { \"type\": \"ollama\",\n                 \"base_url\": \"http://127.0.0.1:11434/v1\" }\n  }\n}"
+    statuses: { openai: "config", anthropic: "config", gemini: "config", openrouter: "config", ollama: "native", gateway: "native" },
+    verdict: "<strong>The unification layer itself.</strong> Two inbound surfaces (<code>/v1/chat/completions</code> + <code>/v1/messages</code>, ADR-0019) and four providers: <code>mock</code>, keyless <code>ollama</code>, <code>openrouter</code>, and <code>anthropic</code> (outbound, ADR-0021). Streaming, CORS, tool-use mapping, 179 offline tests — live-verified against OpenRouter (S19), Ollama (S20), and the Anthropic wire path (S25).",
+    config: "# config.example.json — run once, use everywhere\n{\n  \"server\": { \"host\": \"127.0.0.1\", \"port\": 8080,\n               \"cors_origin\": \"https://agentforgit.github.io\" },\n  \"models\": {\n    \"mock-coder\":       { \"provider\": \"mock\", \"provider_model\": \"mock-coder-v1\" },\n    \"local-llama3\":     { \"provider\": \"ollama\", \"provider_model\": \"llama3.2\" },\n    \"anthropic-sonnet\": { \"provider\": \"anthropic\", \"provider_model\": \"claude-sonnet-4-5\" }\n  },\n  \"providers\": {\n    \"mock\": { \"type\": \"mock\" },\n    \"ollama\": { \"type\": \"ollama\",\n                 \"base_url\": \"http://127.0.0.1:11434/v1\" },\n    \"anthropic\": { \"type\": \"anthropic\",\n                    \"api_key_env\": \"ANTHROPIC_API_KEY\" }\n  }\n}\n\n# ANTHROPIC_API_KEY=... to reach Anthropic's API (ADR-0021)"
   }
 ];
 
