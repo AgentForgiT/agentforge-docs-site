@@ -147,6 +147,14 @@
 
 <section class="section">
   <div class="container">
+    <h2>AgentForge <em>trends</em> (release-to-release)</h2>
+    <p class="sub">Deltas from the published benchmark history (ADR-0033) — medians per release, colored by whether the change is good. ↓ is good when <code style="font-family:var(--mono);color:var(--cyan-bright)">lower</code>, ↑ is good when <code style="font-family:var(--mono);color:var(--cyan-bright)">higher</code>.</p>
+    <div id="trends"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
     <h2>AgentForge <em>measured</em> (offline harness)</h2>
     <p class="sub">Numbers from the reproducible benchmark harness (ADR-0030) — medians over N samples, mock provider, in-process, no network. Anyone with a checkout can reproduce them with <code style="font-family:var(--mono);color:var(--cyan-bright)">python benchmarks/run_benchmarks.py</code>.</p>
     <div id="measured"></div>
@@ -348,6 +356,41 @@ async function probeAll() {
   }
 }
 
+async function loadTrends() {
+  var el = document.getElementById("trends");
+  try {
+    var res = await fetch("history.json");
+    var data = await res.json();
+    var tags = data.releases.map(function(r) { return r.tag; });
+    function cell(trend, tag) {
+      var v = null;
+      for (var i = 0; i < trend.values.length; i++) {
+        if (trend.values[i].tag === tag) { v = trend.values[i].value; break; }
+      }
+      if (v === null) return "<td>—</td>";
+      var idx = -1;
+      for (var i = 0; i < trend.values.length; i++) {
+        if (trend.values[i].tag === tag) { idx = i; break; }
+      }
+      var delta = "";
+      if (idx > 0) {
+        var prev = trend.values[idx - 1].value;
+        if (v < prev) delta = trend.better === "lower" ? " <span style=\"color:var(--green)\">↓</span>" : " <span style=\"color:var(--red)\">↑</span>";
+        else if (v > prev) delta = trend.better === "lower" ? " <span style=\"color:var(--red)\">↑</span>" : " <span style=\"color:var(--green)\">↓</span>";
+      }
+      return "<td>" + v + delta + "</td>";
+    }
+    var head = "<tr><th>Benchmark</th>" + tags.map(function(t) { return "<th>" + t + "</th>"; }).join("") + "</tr>";
+    var rows = data.trends.map(function(t) {
+      return "<tr><td><code>" + esc(t.name) + "</code> <span class=\"tag\">" + t.better + " better</span></td>" + tags.map(function(tag) { return cell(t, tag); }).join("") + "</tr>";
+    }).join("");
+    el.innerHTML = '<table><thead>' + head + "</thead><tbody>" + rows + "</tbody></table>";
+  } catch (e) {
+    el.innerHTML = '<div class="hint" style="color:var(--text-dim)">trends not yet published.</div>';
+  }
+}
+
+loadTrends();
 loadMeasured();
 </script>
 </body>
