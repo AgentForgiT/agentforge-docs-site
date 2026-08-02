@@ -147,6 +147,14 @@
 
 <section class="section">
   <div class="container">
+    <h2>AgentForge <em>measured</em> (offline harness)</h2>
+    <p class="sub">Numbers from the reproducible benchmark harness (ADR-0030) — medians over N samples, mock provider, in-process, no network. Anyone with a checkout can reproduce them with <code style="font-family:var(--mono);color:var(--cyan-bright)">python benchmarks/run_benchmarks.py</code>.</p>
+    <div id="measured"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
     <h2>Live observations <em>(this session)</em></h2>
     <p class="sub">Per-model results from your gateway. These are honest local numbers — not a benchmark claim about a model, just what your hardware + provider returned right now.</p>
     <div id="results"></div>
@@ -230,8 +238,25 @@ function setConn(state, text) {
   dot.className = "dot" + (state === "on" ? " on" : state === "err" ? " err" : state === "busy" ? " busy" : "");
   connText.textContent = text;
 }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function url() { return document.getElementById("gwUrl").value.replace(/\/+$/, ""); }
 function med(nums) { var s = nums.slice().sort(function(a, b) { return a - b; }); var m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+async function loadMeasured() {
+  var el = document.getElementById("measured");
+  try {
+    var res = await fetch("results.json");
+    var data = await res.json();
+    var rows = data.benchmarks.map(function(b) {
+      return "<tr><td><code>" + esc(b.name) + "</code></td><td>" + b.value + " " + b.unit + "</td><td>" + (b.samples ? b.samples.length : 0) + "</td></tr>";
+    }).join("");
+    el.innerHTML =
+      '<table><thead><tr><th>Benchmark</th><th>Median</th><th>Samples</th></tr></thead><tbody>' + rows + "</tbody></table>" +
+      '<div class="hint" style="margin-top:10px">suite: ' + esc(data.suite) + " · python " + esc(data.environment.python) + " · " + esc(data.environment.platform) + " · generated " + esc(data.timestamp) + "</div>";
+  } catch (e) {
+    el.innerHTML = '<div class="hint" style="color:var(--text-dim)">measured results not yet published for this release.</div>';
+  }
+}
 
 function logModel(name, ms, tps) {
   var card = document.createElement("div");
@@ -322,6 +347,8 @@ async function probeAll() {
     resultsEl.appendChild(err);
   }
 }
+
+loadMeasured();
 </script>
 </body>
 </html>

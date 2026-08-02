@@ -1,0 +1,53 @@
+{
+  "schema_version": "0.1",
+  "suite": "offline",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "timestamp": "2026-08-02T10:33:23Z",
+  "benchmarks": [
+    {
+      "name": "gateway.chat_completion.median_latency_ms",
+      "unit": "ms",
+      "value": 0.04,
+      "samples": [
+        0.06,
+        0.02
+      ]
+    },
+    {
+      "name": "gateway.chat_completion.throughput_per_sec",
+      "unit": "completions/s",
+      "value": 25542.78,
+      "samples": []
+    },
+    {
+      "name": "cli.validate_context.median_ms",
+      "unit": "ms",
+      "value": 21.02,
+      "samples": [
+        30.46,
+        11.58
+      ]
+    },
+    {
+      "name": "cli.build_twin.median_ms",
+      "unit": "ms",
+      "value": 11.83,
+      "samples": [
+        12.65,
+        11.01
+      ]
+    },
+    {
+      "name": "aics.validate.median_ms",
+      "unit": "ms",
+      "value": 13.94,
+      "samples": [
+        24.32,
+        3.56
+      ]
+    }
+  ]
+}
