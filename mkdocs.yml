@@ -22,6 +22,7 @@ nav:
   - AICS Validator: aics-validator.html
   - Compatibility: compatibility.html
   - Providers: providers.html
+  - Benchmarks: benchmarks.html
   - Getting Started: getting-started.md
   - Gateway: gateway.md
   - CLI: cli.md

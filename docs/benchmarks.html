@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark Observatory — AgentForge</title>
+<meta name="description" content="Live latency and cost observations for models routed through the AgentForge gateway, plus a curated registry of public benchmarks. Every number traces to a source.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss: #06080d; --carbon: #0c1019; --carbon-light: #111726;
+    --border: #1c2538; --border-bright: #2a3851;
+    --text: #e2e8f0; --text-muted: #64748b; --text-dim: #475569;
+    --indigo: #818cf8; --indigo-bright: #a5b4fc;
+    --cyan: #22d3ee; --cyan-bright: #67e8f9;
+    --green: #34d399; --amber: #fbbf24; --red: #f87171;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--abyss); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; line-height: 1.6; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1;
+    background-image: linear-gradient(rgba(129,140,248,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(129,140,248,0.025) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(6,8,13,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  nav .container { display: flex; align-items: center; height: 56px; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; text-decoration: none; color: inherit; }
+  .logo em { font-family: var(--serif); font-style: italic; font-size: 19px; }
+  .forge-mark { width: 22px; height: 22px; }
+  .forge-mark .node { fill: var(--carbon); stroke: var(--indigo); stroke-width: 1; }
+  .forge-mark .link { stroke: var(--cyan); stroke-width: 0.4; opacity: 0.35; }
+  .forge-mark .core { fill: var(--indigo-bright); }
+  nav ul { display: flex; gap: 16px; list-style: none; margin-left: 16px; }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; font-family: var(--mono); transition: color .15s; }
+  nav a:hover { color: var(--text); }
+  nav a.active { color: var(--cyan-bright); }
+  nav .nav-meta { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+
+  .hero { padding: 80px 0 28px; position: relative; }
+  .hero::before { content: ''; position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(129,140,248,0.06), transparent 70%); pointer-events: none; }
+  .epigraph { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-bottom: 24px; letter-spacing: 0.08em; }
+  .epigraph .sep { margin: 0 10px; color: var(--border-bright); }
+  .hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(38px, 6vw, 56px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .hero h1 em { font-style: italic; }
+  .hero h1 .accent { font-style: italic; background: linear-gradient(135deg, var(--indigo-bright), var(--cyan-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .sub { font-size: 16px; color: var(--text-muted); max-width: 640px; line-height: 1.7; }
+
+  .conn { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 0 6px; }
+  .conn input { flex: 1; min-width: 260px; background: var(--carbon); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 13px; outline: none; }
+  .conn input:focus { border-color: var(--indigo); }
+  .btn { background: linear-gradient(135deg, var(--indigo), #6366f1); color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: filter .15s; }
+  .btn:hover { filter: brightness(1.2); }
+  .btn.ghost { background: var(--carbon); color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  .btn.ghost:hover { border-color: var(--border-bright); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .status { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+  .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.err { background: var(--red); }
+  .dot.busy { background: var(--amber); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* live observation cards */
+  .obs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 18px 0; }
+  .obs-card { background: var(--carbon); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .obs-card .label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 8px; }
+  .obs-card .value { font-family: var(--serif); font-style: italic; font-size: 28px; color: var(--cyan-bright); line-height: 1; }
+  .obs-card .hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-family: var(--mono); }
+
+  .section { padding: 40px 0; border-top: 1px solid var(--border); }
+  .section h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .section h2 em { font-style: italic; color: var(--indigo-bright); }
+  .section .sub { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; max-width: 680px; line-height: 1.7; }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--carbon); }
+  th, td { padding: 11px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+  thead th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 500; background: var(--carbon-light); }
+  tbody tr:hover { background: rgba(129,140,248,0.04); }
+  td code { font-family: var(--mono); font-size: 12px; color: var(--cyan-bright); background: var(--carbon-light); padding: 1px 5px; border-radius: 4px; }
+  td .src { color: var(--text-dim); font-size: 11px; font-family: var(--mono); }
+  td .src a { color: var(--indigo-bright); text-decoration: none; }
+  td .src a:hover { text-decoration: underline; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 9999px; border: 1px solid var(--border-bright); }
+  .tag.ver { color: var(--green); border-color: rgba(52,211,153,0.4); }
+  .tag.honest { color: var(--amber); border-color: rgba(251,191,36,0.4); }
+
+  .hint { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .hint code { font-family: var(--mono); font-size: 11px; color: var(--cyan-bright); background: var(--carbon-light); padding: 1px 5px; border-radius: 4px; }
+
+  footer { padding: 40px 0 32px; border-top: 1px solid var(--border); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  footer .bottom { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+  footer .bottom a { color: var(--cyan-bright); text-decoration: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a class="logo" href="index.html">
+      <svg class="forge-mark" viewBox="0 0 24 24" fill="none"><polygon class="node" points="12,2 20,7 20,17 12,22 4,17 4,7"/><line class="link" x1="12" y1="2" x2="12" y2="22"/><line class="link" x1="4" y1="7" x2="20" y2="17"/><line class="link" x1="20" y1="7" x2="4" y2="17"/><circle class="core" cx="12" cy="12" r="2.5"/></svg>
+      <em>AgentForge</em>
+    </a>
+    <ul>
+      <li><a href="index.html">home</a></li>
+      <li><a href="playground.html">playground</a></li>
+      <li><a href="aics-validator.html">validator</a></li>
+      <li><a href="compatibility.html">compatibility</a></li>
+      <li><a href="providers.html">providers</a></li>
+      <li><a href="benchmarks.html" class="active">benchmarks</a></li>
+      <li><a href="https://github.com/AgentForgiT/agentforge">github</a></li>
+    </ul>
+    <div class="nav-meta">★ 42 · MIT</div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="epigraph">
+      <span>Genesis 0.0.30</span><span class="sep">·</span><span>live observations + curated registry</span><span class="sep">·</span><span>no invented numbers</span>
+    </div>
+    <h1>The <em class="accent">Benchmark Observatory</em></h1>
+    <p class="sub">Two halves: <strong style="color:var(--text)">live observations</strong> — latency and throughput measured through <em>your</em> gateway, on your machine, right now — and a <strong style="color:var(--text)">curated registry</strong> of public benchmarks, every row tracing to a citable source.</p>
+    <div class="conn">
+      <input type="text" id="gwUrl" value="http://127.0.0.1:8080" spellcheck="false" placeholder="http://127.0.0.1:8080">
+      <button class="btn" onclick="probe()">Probe gateway</button>
+      <button class="btn ghost" onclick="probeAll()">Probe all models</button>
+      <div class="status"><span class="dot" id="dot"></span><span id="connText">not connected</span></div>
+    </div>
+    <div class="hint">Probe runs 3 warm completions per model and reports median latency + tokens/sec. Everything happens in your browser against your gateway — nothing is uploaded.</div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="obs" id="obsGrid">
+    <div class="obs-card"><div class="label">Models observed</div><div class="value" id="obsModels">—</div><div class="hint">from /v1/models</div></div>
+    <div class="obs-card"><div class="label">Median latency</div><div class="value" id="obsLatency">—</div><div class="hint">ms · this machine</div></div>
+    <div class="obs-card"><div class="label">Throughput</div><div class="value" id="obsTps">—</div><div class="hint">tokens/sec</div></div>
+    <div class="obs-card"><div class="label">Probes</div><div class="value" id="obsProbes">0</div><div class="hint">completed this session</div></div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <h2>Live observations <em>(this session)</em></h2>
+    <p class="sub">Per-model results from your gateway. These are honest local numbers — not a benchmark claim about a model, just what your hardware + provider returned right now.</p>
+    <div id="results"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2>Registry: <em>public benchmarks</em></h2>
+    <p class="sub">A curated starting point — the widely-cited public evaluations the community actually references. Rows are traceable; where a number is contested we say so rather than silently picking a side.</p>
+    <table>
+      <thead>
+        <tr><th>Benchmark</th><th>Measures</th><th>Scope</th><th>Source</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>SWE-bench Verified</code></td>
+          <td>Real GitHub issue resolution (Python)</td>
+          <td>Agentic coding</td>
+          <td class="src"><a href="https://arxiv.org/abs/2410.06732" target="_blank">OpenAI et al., arXiv 2410.06732</a></td>
+        </tr>
+        <tr>
+          <td><code>HumanEval+</code></td>
+          <td>Code generation (unit-test verified)</td>
+          <td>Code synthesis</td>
+          <td class="src"><a href="https://github.com/evalplus/evalplus" target="_blank">EvalPlus (Liu et al.)</a></td>
+        </tr>
+        <tr>
+          <td><code>LiveCodeBench</code></td>
+          <td>Contamination-resistant coding problems</td>
+          <td>Code synthesis</td>
+          <td class="src"><a href="https://arxiv.org/abs/2403.07974" target="_blank">Jain et al., arXiv 2403.07974</a></td>
+        </tr>
+        <tr>
+          <td><code>MMLU</code></td>
+          <td>57-subject knowledge</td>
+          <td>Reasoning</td>
+          <td class="src"><a href="https://arxiv.org/abs/2009.03300" target="_blank">Hendrycks et al., arXiv 2009.03300</a></td>
+        </tr>
+        <tr>
+          <td><code>GPQA Diamond</code></td>
+          <td>Graduate-level science (expert-verified)</td>
+          <td>Reasoning</td>
+          <td class="src"><a href="https://arxiv.org/abs/2311.12022" target="_blank">Rein et al., arXiv 2311.12022</a></td>
+        </tr>
+        <tr>
+          <td><code>OpenHands / SWE-agent</code></td>
+          <td>Agent framework vs. benchmark methodology</td>
+          <td>Agentic methodology</td>
+          <td class="src"><a href="https://arxiv.org/abs/2407.16741" target="_blank">OpenHands, arXiv 2407.16741</a></td>
+        </tr>
+        <tr>
+          <td><code>tau-bench</code></td>
+          <td>Tool-agent user-interaction benchmarks</td>
+          <td>Tool use</td>
+          <td class="src"><a href="https://arxiv.org/abs/2406.12045" target="_blank">Yao et al., arXiv 2406.12045</a></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:14px">
+      <span class="tag ver">verifiable</span> every row links a primary source · <span class="tag honest">honest</span> we do not paste leaderboard scores here — cross-repo runs vary by harness, seed, and temperature, so raw numbers without methodology are noise. The observatory's <em>own</em> numbers come from your live probes above.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="bottom">Genesis 0.0.30 · built on AgentForge · <a href="https://agentforgit.github.io/agentforge-docs-site/">agentforgit.github.io</a></div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+var gw = null;
+var probes = 0;
+var resultsEl = document.getElementById("results");
+var dot = document.getElementById("dot");
+var connText = document.getElementById("connText");
+
+function setConn(state, text) {
+  dot.className = "dot" + (state === "on" ? " on" : state === "err" ? " err" : state === "busy" ? " busy" : "");
+  connText.textContent = text;
+}
+function url() { return document.getElementById("gwUrl").value.replace(/\/+$/, ""); }
+function med(nums) { var s = nums.slice().sort(function(a, b) { return a - b; }); var m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+function logModel(name, ms, tps) {
+  var card = document.createElement("div");
+  card.className = "obs-card";
+  card.style.marginBottom = "8px";
+  card.innerHTML = '<div class="label">' + name + "</div>" +
+    '<div class="value" style="font-size:20px">' + ms.toFixed(0) + ' ms · ' + tps.toFixed(1) + ' tok/s</div>';
+  resultsEl.appendChild(card);
+}
+
+async function probeOne(model) {
+  var body = {
+    model: model,
+    stream: false,
+    messages: [{ role: "user", content: "Write a one-sentence summary of the AgentForge project." }]
+  };
+  var times = [];
+  var tokens = 0;
+  for (var i = 0; i < 3; i++) {
+    var t0 = performance.now();
+    var res = await fetch(url() + "/v1/chat/completions", {
+      method: "POST", mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    var json = await res.json();
+    var t1 = performance.now();
+    times.push(t1 - t0);
+    if (json.usage && json.usage.completion_tokens) tokens = json.usage.completion_tokens;
+    if (json.error) throw new Error(json.error.message);
+  }
+  var ms = med(times);
+  var tps = tokens > 0 ? (tokens / (ms / 1000)) : 0;
+  probes += 1;
+  document.getElementById("obsProbes").textContent = probes;
+  logModel(model, ms, tps);
+  return { model: model, ms: ms, tps: tps };
+}
+
+async function probe() {
+  resultsEl.innerHTML = "";
+  setConn("busy", "probing…");
+  try {
+    var modelsRes = await fetch(url() + "/v1/models", { mode: "cors" });
+    var modelsBody = await modelsRes.json();
+    var models = (modelsBody.data || []).map(function(m) { return m.id; });
+    if (!models.length) throw new Error("no models registered");
+    gw = url();
+    document.getElementById("obsModels").textContent = models.length;
+    var first = await probeOne(models[0]);
+    document.getElementById("obsLatency").textContent = first.ms.toFixed(0) + " ms";
+    document.getElementById("obsTps").textContent = first.tps.toFixed(1) + " tok/s";
+    setConn("on", "probe complete");
+  } catch (e) {
+    setConn("err", "probe failed");
+    var err = document.createElement("div");
+    err.style.cssText = "color:var(--red);font-family:var(--mono);font-size:12px;padding:8px 0";
+    err.textContent = "probe failed: " + e.message;
+    resultsEl.appendChild(err);
+  }
+}
+
+async function probeAll() {
+  resultsEl.innerHTML = "";
+  setConn("busy", "probing all models…");
+  try {
+    var modelsRes = await fetch(url() + "/v1/models", { mode: "cors" });
+    var modelsBody = await modelsRes.json();
+    var models = (modelsBody.data || []).map(function(m) { return m.id; });
+    if (!models.length) throw new Error("no models registered");
+    gw = url();
+    document.getElementById("obsModels").textContent = models.length;
+    var latencies = [];
+    var tpsList = [];
+    for (var i = 0; i < models.length; i++) {
+      var r = await probeOne(models[i]);
+      latencies.push(r.ms);
+      tpsList.push(r.tps);
+    }
+    document.getElementById("obsLatency").textContent = med(latencies).toFixed(0) + " ms";
+    document.getElementById("obsTps").textContent = (tpsList.reduce(function(a, b) { return a + b; }, 0) / tpsList.length).toFixed(1) + " tok/s";
+    setConn("on", "all models probed");
+  } catch (e) {
+    setConn("err", "probe failed");
+    var err = document.createElement("div");
+    err.style.cssText = "color:var(--red);font-family:var(--mono);font-size:12px;padding:8px 0";
+    err.textContent = "probe failed: " + e.message;
+    resultsEl.appendChild(err);
+  }
+}
+</script>
+</body>
+</html>
