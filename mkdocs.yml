@@ -27,7 +27,9 @@ nav:
   - Getting Started: getting-started.md
   - Gateway: gateway.md
   - CLI: cli.md
+  - SDK: sdk.md
   - AICS: aics.md
+  - MCP: mcp.md
   - Governance: governance.md
   - Contributing: contributing.md
   - Handbook: https://github.com/AgentForgiT/agentforge-handbook
